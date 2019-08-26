@@ -27,7 +27,7 @@ func TestArgs(t *testing.T) {
 	assert.Equal(t, pgsql.Placeholder(1), placeholder)
 	assert.Equal(t, []interface{}{42, 7}, args.Values())
 
-	assert.Equal(t, pgsql.Raw("array[$3, $1, $2]"), args.Format("array[?, ?, ?]", 1, 42, 7))
+	assert.Equal(t, "array[$3, $1, $2]", args.Format("array[?, ?, ?]", 1, 42, 7))
 }
 
 func BenchmarkArgs_1_Uses_1_Values(b *testing.B) {

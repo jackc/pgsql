@@ -11,74 +11,39 @@ type ToSQL interface {
 	writeToSQL(io.Writer)
 }
 
-type Raw string
+type rawSQL string
 
-func (r Raw) String() string {
+func (r rawSQL) String() string {
 	return string(r)
 }
 
-func (r Raw) writeToSQL(w io.Writer) {
+func (r rawSQL) writeToSQL(w io.Writer) {
 	io.WriteString(w, string(r))
 }
 
-type SelectStatement struct {
-	Select  SelectClause
-	From    FromClause
-	Where   WhereClause
-	OrderBy OrderByClause
-	Limit   LimitClause
-	Offset  OffsetClause
-}
-
-func (s *SelectStatement) String() string {
-	sb := &strings.Builder{}
-	s.writeToSQL(sb)
-	return sb.String()
-}
-
-func (s *SelectStatement) writeToSQL(w io.Writer) {
-	s.Select.writeToSQL(w)
-	io.WriteString(w, " ")
-	s.From.writeToSQL(w)
-	io.WriteString(w, " ")
-	s.Where.writeToSQL(w)
-	io.WriteString(w, " ")
-	s.OrderBy.writeToSQL(w)
-	io.WriteString(w, " ")
-	s.Limit.writeToSQL(w)
-	io.WriteString(w, " ")
-	s.Offset.writeToSQL(w)
-}
-
 type SelectClause struct {
-	Distinct           bool
+	IsDistinct         bool
 	DistinctOnExprList []ToSQL
 	ExprList           []ToSQL
 }
 
-func (s *SelectClause) AddDistinctOn(expr ToSQL) {
-	s.Distinct = true
-	s.DistinctOnExprList = append(s.DistinctOnExprList, expr)
+func (s *SelectClause) Distinct() {
+	s.IsDistinct = true
 }
 
-func (s *SelectClause) AddDistinctOnr(raw string) {
-	s.AddDistinctOn(Raw(raw))
+func (s *SelectClause) DistinctOn(sql string, args *Args, values ...interface{}) {
+	s.Distinct()
+	if len(values) > 0 {
+		sql = args.Format(sql, values...)
+	}
+	s.DistinctOnExprList = append(s.DistinctOnExprList, rawSQL(sql))
 }
 
-func (s *SelectClause) AddDistinctOnf(args *Args, sql string, values ...interface{}) {
-	s.AddDistinctOn(args.Format(sql, values...))
-}
-
-func (s *SelectClause) Add(expr ToSQL) {
-	s.ExprList = append(s.ExprList, expr)
-}
-
-func (s *SelectClause) Addr(raw string) {
-	s.Add(Raw(raw))
-}
-
-func (s *SelectClause) Andf(args *Args, sql string, values ...interface{}) {
-	s.Add(args.Format(sql, values...))
+func (s *SelectClause) Select(sql string, args *Args, values ...interface{}) {
+	if len(values) > 0 {
+		sql = args.Format(sql, values...)
+	}
+	s.ExprList = append(s.ExprList, rawSQL(sql))
 }
 
 func (s *SelectClause) String() string {
@@ -89,7 +54,7 @@ func (s *SelectClause) String() string {
 
 func (s *SelectClause) writeToSQL(w io.Writer) {
 	io.WriteString(w, "select")
-	if s.Distinct {
+	if s.IsDistinct {
 		io.WriteString(w, " distinct")
 	}
 
@@ -111,16 +76,8 @@ type FromClause struct {
 	Value ToSQL
 }
 
-func (f *FromClause) Set(v ToSQL) {
-	f.Value = v
-}
-
-func (f *FromClause) Setr(raw string) {
-	f.Set(Raw(raw))
-}
-
-func (f *FromClause) Setf(args *Args, sql string, values ...interface{}) {
-	f.Set(args.Format(sql, values...))
+func (f *FromClause) From(sql string, args *Args, values ...interface{}) {
+	f.Value = rawSQL(args.Format(sql, values...))
 }
 
 func (f *FromClause) String() string {
@@ -157,7 +114,13 @@ func (wc *WhereClause) writeToSQL(w io.Writer) {
 	wc.Cond.writeToSQL(w)
 }
 
-func (wc *WhereClause) And(cond ToSQL) {
+func (wc *WhereClause) Where(sql string, args *Args, values ...interface{}) {
+	if len(values) > 0 {
+		sql = args.Format(sql, values...)
+	}
+
+	cond := rawSQL(sql)
+
 	if wc.Cond == nil {
 		wc.Cond = cond
 	} else {
@@ -165,28 +128,18 @@ func (wc *WhereClause) And(cond ToSQL) {
 	}
 }
 
-func (wc *WhereClause) Andr(raw string) {
-	wc.And(Raw(raw))
-}
+func (wc *WhereClause) Or(sql string, args *Args, values ...interface{}) {
+	if len(values) > 0 {
+		sql = args.Format(sql, values...)
+	}
 
-func (wc *WhereClause) Andf(args *Args, sql string, values ...interface{}) {
-	wc.And(args.Format(sql, values...))
-}
+	cond := rawSQL(sql)
 
-func (wc *WhereClause) Or(cond ToSQL) {
 	if wc.Cond == nil {
 		wc.Cond = cond
 	} else {
 		wc.Cond = &Or{Left: wc.Cond, Right: cond}
 	}
-}
-
-func (wc *WhereClause) Orr(raw string) {
-	wc.Or(Raw(raw))
-}
-
-func (wc *WhereClause) Orf(args *Args, sql string, values ...interface{}) {
-	wc.Or(args.Format(sql, values...))
 }
 
 type And struct {
@@ -231,16 +184,11 @@ type OrderByClause struct {
 	ExprList []ToSQL
 }
 
-func (o *OrderByClause) Add(expr ToSQL) {
-	o.ExprList = append(o.ExprList, expr)
-}
-
-func (o *OrderByClause) Addr(raw string) {
-	o.Add(Raw(raw))
-}
-
-func (o *OrderByClause) Andf(args *Args, sql string, values ...interface{}) {
-	o.Add(args.Format(sql, values...))
+func (o *OrderByClause) OrderBy(sql string, args *Args, values ...interface{}) {
+	if len(values) > 0 {
+		sql = args.Format(sql, values...)
+	}
+	o.ExprList = append(o.ExprList, rawSQL(sql))
 }
 
 func (o *OrderByClause) String() string {
@@ -262,16 +210,11 @@ type LimitClause struct {
 	Value ToSQL
 }
 
-func (l *LimitClause) Set(v ToSQL) {
-	l.Value = v
-}
-
-func (l *LimitClause) Setr(raw string) {
-	l.Set(Raw(raw))
-}
-
-func (l *LimitClause) Setf(args *Args, sql string, values ...interface{}) {
-	l.Set(args.Format(sql, values...))
+func (l *LimitClause) Limit(sql string, args *Args, values ...interface{}) {
+	if len(values) > 0 {
+		sql = args.Format(sql, values...)
+	}
+	l.Value = rawSQL(sql)
 }
 
 func (l *LimitClause) String() string {
@@ -293,16 +236,11 @@ type OffsetClause struct {
 	Value ToSQL
 }
 
-func (o *OffsetClause) Set(v ToSQL) {
-	o.Value = v
-}
-
-func (o *OffsetClause) Setr(raw string) {
-	o.Set(Raw(raw))
-}
-
-func (o *OffsetClause) Setf(args *Args, sql string, values ...interface{}) {
-	o.Set(args.Format(sql, values...))
+func (o *OffsetClause) Offset(sql string, args *Args, values ...interface{}) {
+	if len(values) > 0 {
+		sql = args.Format(sql, values...)
+	}
+	o.Value = rawSQL(sql)
 }
 
 func (o *OffsetClause) String() string {

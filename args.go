@@ -49,7 +49,7 @@ func (a *Args) Values() []interface{} {
 	return a.values
 }
 
-func (a *Args) Format(s string, values ...interface{}) Raw {
+func (a *Args) Format(s string, values ...interface{}) string {
 	b := &strings.Builder{}
 
 	for i := 0; ; i++ {
@@ -64,7 +64,7 @@ func (a *Args) Format(s string, values ...interface{}) Raw {
 		s = s[pos+1:]
 	}
 
-	return Raw(b.String())
+	return b.String()
 }
 
 func (a *Args) existingPlaceholder(v interface{}) (p Placeholder, present bool) {
