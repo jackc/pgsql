@@ -8,8 +8,8 @@ import (
 
 type SelectClause struct {
 	IsDistinct         bool
-	DistinctOnExprList []string
-	ExprList           []string
+	DistinctOnExprList string
+	ExprList           string
 }
 
 func (s *SelectClause) Distinct() {
@@ -21,17 +21,27 @@ func (s *SelectClause) DistinctOn(sql string, args *Args, values ...interface{})
 	if len(values) > 0 {
 		sql = args.Format(sql, values...)
 	}
-	s.DistinctOnExprList = append(s.DistinctOnExprList, sql)
+
+	if len(s.DistinctOnExprList) > 0 {
+		s.DistinctOnExprList += ", " + sql
+	} else {
+		s.DistinctOnExprList = sql
+	}
 }
 
 func (s *SelectClause) Select(sql string, args *Args, values ...interface{}) {
 	if len(values) > 0 {
 		sql = args.Format(sql, values...)
 	}
-	s.ExprList = append(s.ExprList, sql)
+
+	if len(s.ExprList) > 0 {
+		s.ExprList += ", " + sql
+	} else {
+		s.ExprList = sql
+	}
 }
 
-func (s *SelectClause) String() string {
+func (s SelectClause) String() string {
 	sb := &strings.Builder{}
 	sb.WriteString("select")
 	if s.IsDistinct {
@@ -40,13 +50,13 @@ func (s *SelectClause) String() string {
 
 	if len(s.DistinctOnExprList) > 0 {
 		sb.WriteString(" on (")
-		writeExprList(sb, s.DistinctOnExprList)
+		sb.WriteString(s.DistinctOnExprList)
 		sb.WriteString(")")
 	}
 
 	sb.WriteString(" ")
 	if len(s.ExprList) > 0 {
-		writeExprList(sb, s.ExprList)
+		sb.WriteString(s.ExprList)
 	} else {
 		sb.WriteString("*")
 	}
@@ -54,32 +64,28 @@ func (s *SelectClause) String() string {
 	return sb.String()
 }
 
-type FromClause struct {
-	Value string
-}
+type FromClause string
 
 func (f *FromClause) From(sql string, args *Args, values ...interface{}) {
-	f.Value = (args.Format(sql, values...))
+	*f = FromClause(args.Format(sql, values...))
 }
 
-func (f *FromClause) String() string {
-	if f.Value == "" {
+func (f FromClause) String() string {
+	if len(f) == 0 {
 		return ""
 	}
 
-	return "from " + f.Value
+	return "from " + string(f)
 }
 
-type WhereClause struct {
-	Cond string
-}
+type WhereClause string
 
-func (wc *WhereClause) String() string {
-	if wc.Cond == "" {
+func (wc WhereClause) String() string {
+	if len(wc) == 0 {
 		return ""
 	}
 
-	return "where " + wc.Cond
+	return "where " + string(wc)
 }
 
 func (wc *WhereClause) Where(sql string, args *Args, values ...interface{}) {
@@ -87,10 +93,10 @@ func (wc *WhereClause) Where(sql string, args *Args, values ...interface{}) {
 		sql = args.Format(sql, values...)
 	}
 
-	if wc.Cond == "" {
-		wc.Cond = sql
+	if len(*wc) == 0 {
+		*wc = WhereClause(sql)
 	} else {
-		wc.Cond = fmt.Sprintf("(%s and %s)", wc.Cond, sql)
+		*wc = WhereClause(fmt.Sprintf("(%s and %s)", string(*wc), sql))
 	}
 }
 
@@ -99,71 +105,67 @@ func (wc *WhereClause) Or(sql string, args *Args, values ...interface{}) {
 		sql = args.Format(sql, values...)
 	}
 
-	if wc.Cond == "" {
-		wc.Cond = sql
+	if len(*wc) == 0 {
+		*wc = WhereClause(sql)
 	} else {
-		wc.Cond = fmt.Sprintf("(%s or %s)", wc.Cond, sql)
+		*wc = WhereClause(fmt.Sprintf("(%s or %s)", string(*wc), sql))
 	}
 }
 
-type OrderByClause struct {
-	ExprList []string
-}
+type OrderByClause string
 
 func (o *OrderByClause) OrderBy(sql string, args *Args, values ...interface{}) {
 	if len(values) > 0 {
 		sql = args.Format(sql, values...)
 	}
-	o.ExprList = append(o.ExprList, sql)
+
+	if len(*o) > 0 {
+		*o = OrderByClause(string(*o) + ", " + sql)
+	} else {
+		*o = OrderByClause(sql)
+	}
 }
 
-func (o *OrderByClause) String() string {
-	if len(o.ExprList) == 0 {
+func (o OrderByClause) String() string {
+	if len(o) == 0 {
 		return ""
 	}
 
-	sb := &strings.Builder{}
-	sb.WriteString("order by ")
-	writeExprList(sb, o.ExprList)
-	return sb.String()
+	return "order by " + string(o)
 }
 
-type LimitClause struct {
-	Value string
-}
+type LimitClause string
 
 func (l *LimitClause) Limit(sql string, args *Args, values ...interface{}) {
 	if len(values) > 0 {
 		sql = args.Format(sql, values...)
 	}
-	l.Value = sql
+	*l = LimitClause(sql)
 }
 
-func (l *LimitClause) String() string {
-	if l.Value == "" {
+func (l LimitClause) String() string {
+	if len(l) == 0 {
 		return ""
 	}
 
-	return "limit " + l.Value
+	return "limit " + string(l)
 }
 
-type OffsetClause struct {
-	Value string
-}
+type OffsetClause string
 
 func (o *OffsetClause) Offset(sql string, args *Args, values ...interface{}) {
 	if len(values) > 0 {
 		sql = args.Format(sql, values...)
 	}
-	o.Value = (sql)
+	*o = OffsetClause(sql)
 }
 
-func (o *OffsetClause) String() string {
-	if o.Value == "" {
+func (o OffsetClause) String() string {
+	if len(o) == 0 {
 		return ""
 	}
 
-	return "offset " + o.Value
+	return "offset " + string(o)
 }
 
 func writeExprList(sb *strings.Builder, exprList []string) {

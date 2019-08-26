@@ -65,7 +65,7 @@ func TestSelectClause(t *testing.T) {
 }
 
 func TestFromClause(t *testing.T) {
-	f := &pgsql.FromClause{}
+	var f pgsql.FromClause
 	assert.Equal(t, "", f.String(), "empty")
 
 	f.From("users", nil)
@@ -73,7 +73,7 @@ func TestFromClause(t *testing.T) {
 }
 
 func TestWhereClause(t *testing.T) {
-	wc := &pgsql.WhereClause{}
+	var wc pgsql.WhereClause
 	assert.Equal(t, "", wc.String(), "empty")
 
 	wc.Where("true", nil)
@@ -89,7 +89,7 @@ func TestWhereClause(t *testing.T) {
 func TestWhereAndArgs(t *testing.T) {
 	args := &pgsql.Args{}
 
-	w := &pgsql.WhereClause{}
+	var w pgsql.WhereClause
 	w.Where("id=?", args, 42)
 	w.Or("id=?", args, 43)
 
@@ -98,7 +98,7 @@ func TestWhereAndArgs(t *testing.T) {
 }
 
 func TestOrderByClause(t *testing.T) {
-	ob := &pgsql.OrderByClause{}
+	var ob pgsql.OrderByClause
 	assert.Equal(t, "", ob.String(), "empty")
 
 	ob.OrderBy("1 asc", nil)
@@ -109,7 +109,7 @@ func TestOrderByClause(t *testing.T) {
 }
 
 func TestLimitClause(t *testing.T) {
-	l := &pgsql.LimitClause{}
+	var l pgsql.LimitClause
 	assert.Equal(t, "", l.String(), "empty")
 
 	l.Limit("10", nil)
@@ -117,7 +117,7 @@ func TestLimitClause(t *testing.T) {
 }
 
 func TestOffsetClause(t *testing.T) {
-	o := &pgsql.OffsetClause{}
+	var o pgsql.OffsetClause
 	assert.Equal(t, "", o.String(), "empty")
 
 	o.Offset("10", nil)
