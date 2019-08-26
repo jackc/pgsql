@@ -11,22 +11,22 @@ import (
 func TestSelectStatement(t *testing.T) {
 	s := &pgsql.SelectStatement{}
 
-	s.Select.Add(pgsql.Raw("id"))
+	s.Select.Addr("id")
 	assert.Equal(t, "select id", strings.TrimSpace(s.String()))
 
-	s.From.Value = pgsql.Raw("users")
+	s.From.Setr("users")
 	assert.Equal(t, `select id from users`, strings.TrimSpace(s.String()))
 
-	s.Where.And(pgsql.Raw("id=42"))
+	s.Where.Andr("id=42")
 	assert.Equal(t, `select id from users where id=42`, strings.TrimSpace(s.String()))
 
 	s.OrderBy.Add(pgsql.Raw("name"))
 	assert.Equal(t, `select id from users where id=42 order by name`, strings.TrimSpace(s.String()))
 
-	s.Limit.Expr = pgsql.Raw("10")
+	s.Limit.Setr("10")
 	assert.Equal(t, `select id from users where id=42 order by name limit 10`, strings.TrimSpace(s.String()))
 
-	s.Offset.Expr = pgsql.Raw("5")
+	s.Offset.Setr("5")
 	assert.Equal(t, `select id from users where id=42 order by name limit 10 offset 5`, strings.TrimSpace(s.String()))
 }
 
@@ -62,13 +62,13 @@ func TestWhereClause(t *testing.T) {
 	wc := &pgsql.WhereClause{}
 	assert.Equal(t, "", wc.String(), "empty")
 
-	wc.And(pgsql.Raw("true"))
+	wc.Andr("true")
 	assert.Equal(t, "where true", wc.String())
 
-	wc.And(pgsql.Raw("1=1"))
+	wc.Andr("1=1")
 	assert.Equal(t, "where (true and 1=1)", wc.String())
 
-	wc.Or(pgsql.Raw("1+1=2"))
+	wc.Orr("1+1=2")
 	assert.Equal(t, "where ((true and 1=1) or 1+1=2)", wc.String())
 }
 
@@ -76,8 +76,8 @@ func TestWhereAndArgs(t *testing.T) {
 	args := &pgsql.Args{}
 
 	w := &pgsql.WhereClause{}
-	w.And(args.SQL("id=?", 42))
-	w.Or(args.SQL("id=?", 43))
+	w.Andf(args, "id=?", 42)
+	w.Orf(args, "id=?", 43)
 
 	assert.Equal(t, "where (id=$1 or id=$2)", w.String())
 	assert.Equal(t, []interface{}{42, 43}, args.Values())
@@ -98,7 +98,7 @@ func TestLimitClause(t *testing.T) {
 	l := &pgsql.LimitClause{}
 	assert.Equal(t, "", l.String(), "empty")
 
-	l.Expr = pgsql.Raw("10")
+	l.Setr("10")
 	assert.Equal(t, "limit 10", l.String())
 }
 
@@ -106,6 +106,6 @@ func TestOffsetClause(t *testing.T) {
 	o := &pgsql.OffsetClause{}
 	assert.Equal(t, "", o.String(), "empty")
 
-	o.Expr = pgsql.Raw("10")
+	o.Setr("10")
 	assert.Equal(t, "offset 10", o.String())
 }

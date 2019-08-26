@@ -49,7 +49,7 @@ func (a *Args) Values() []interface{} {
 	return a.values
 }
 
-func (a *Args) SQL(s string, values ...interface{}) Raw {
+func (a *Args) Format(s string, values ...interface{}) Raw {
 	b := &strings.Builder{}
 
 	for i := 0; ; i++ {

@@ -61,8 +61,24 @@ func (s *SelectClause) AddDistinctOn(expr ToSQL) {
 	s.DistinctOnExprList = append(s.DistinctOnExprList, expr)
 }
 
+func (s *SelectClause) AddDistinctOnr(raw string) {
+	s.AddDistinctOn(Raw(raw))
+}
+
+func (s *SelectClause) AddDistinctOnf(args *Args, sql string, values ...interface{}) {
+	s.AddDistinctOn(args.Format(sql, values...))
+}
+
 func (s *SelectClause) Add(expr ToSQL) {
 	s.ExprList = append(s.ExprList, expr)
+}
+
+func (s *SelectClause) Addr(raw string) {
+	s.Add(Raw(raw))
+}
+
+func (s *SelectClause) Andf(args *Args, sql string, values ...interface{}) {
+	s.Add(args.Format(sql, values...))
 }
 
 func (s *SelectClause) String() string {
@@ -93,6 +109,18 @@ func (s *SelectClause) writeToSQL(w io.Writer) {
 
 type FromClause struct {
 	Value ToSQL
+}
+
+func (f *FromClause) Set(v ToSQL) {
+	f.Value = v
+}
+
+func (f *FromClause) Setr(raw string) {
+	f.Set(Raw(raw))
+}
+
+func (f *FromClause) Setf(args *Args, sql string, values ...interface{}) {
+	f.Set(args.Format(sql, values...))
 }
 
 func (f *FromClause) String() string {
@@ -137,12 +165,28 @@ func (wc *WhereClause) And(cond ToSQL) {
 	}
 }
 
+func (wc *WhereClause) Andr(raw string) {
+	wc.And(Raw(raw))
+}
+
+func (wc *WhereClause) Andf(args *Args, sql string, values ...interface{}) {
+	wc.And(args.Format(sql, values...))
+}
+
 func (wc *WhereClause) Or(cond ToSQL) {
 	if wc.Cond == nil {
 		wc.Cond = cond
 	} else {
 		wc.Cond = &Or{Left: wc.Cond, Right: cond}
 	}
+}
+
+func (wc *WhereClause) Orr(raw string) {
+	wc.Or(Raw(raw))
+}
+
+func (wc *WhereClause) Orf(args *Args, sql string, values ...interface{}) {
+	wc.Or(args.Format(sql, values...))
 }
 
 type And struct {
@@ -191,6 +235,14 @@ func (o *OrderByClause) Add(expr ToSQL) {
 	o.ExprList = append(o.ExprList, expr)
 }
 
+func (o *OrderByClause) Addr(raw string) {
+	o.Add(Raw(raw))
+}
+
+func (o *OrderByClause) Andf(args *Args, sql string, values ...interface{}) {
+	o.Add(args.Format(sql, values...))
+}
+
 func (o *OrderByClause) String() string {
 	sb := &strings.Builder{}
 	o.writeToSQL(sb)
@@ -207,7 +259,19 @@ func (o *OrderByClause) writeToSQL(w io.Writer) {
 }
 
 type LimitClause struct {
-	Expr ToSQL
+	Value ToSQL
+}
+
+func (l *LimitClause) Set(v ToSQL) {
+	l.Value = v
+}
+
+func (l *LimitClause) Setr(raw string) {
+	l.Set(Raw(raw))
+}
+
+func (l *LimitClause) Setf(args *Args, sql string, values ...interface{}) {
+	l.Set(args.Format(sql, values...))
 }
 
 func (l *LimitClause) String() string {
@@ -217,16 +281,28 @@ func (l *LimitClause) String() string {
 }
 
 func (l *LimitClause) writeToSQL(w io.Writer) {
-	if l.Expr == nil {
+	if l.Value == nil {
 		return
 	}
 
 	io.WriteString(w, "limit ")
-	l.Expr.writeToSQL(w)
+	l.Value.writeToSQL(w)
 }
 
 type OffsetClause struct {
-	Expr ToSQL
+	Value ToSQL
+}
+
+func (o *OffsetClause) Set(v ToSQL) {
+	o.Value = v
+}
+
+func (o *OffsetClause) Setr(raw string) {
+	o.Set(Raw(raw))
+}
+
+func (o *OffsetClause) Setf(args *Args, sql string, values ...interface{}) {
+	o.Set(args.Format(sql, values...))
 }
 
 func (o *OffsetClause) String() string {
@@ -236,12 +312,12 @@ func (o *OffsetClause) String() string {
 }
 
 func (o *OffsetClause) writeToSQL(w io.Writer) {
-	if o.Expr == nil {
+	if o.Value == nil {
 		return
 	}
 
 	io.WriteString(w, "offset ")
-	o.Expr.writeToSQL(w)
+	o.Value.writeToSQL(w)
 }
 
 func writeExprList(w io.Writer, exprList []ToSQL) {
