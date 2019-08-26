@@ -2,29 +2,15 @@
 package pgsql
 
 import (
+	"fmt"
 	"io"
 	"strings"
 )
 
-type ToSQL interface {
-	String() string
-	writeToSQL(io.Writer)
-}
-
-type rawSQL string
-
-func (r rawSQL) String() string {
-	return string(r)
-}
-
-func (r rawSQL) writeToSQL(w io.Writer) {
-	io.WriteString(w, string(r))
-}
-
 type SelectClause struct {
 	IsDistinct         bool
-	DistinctOnExprList []ToSQL
-	ExprList           []ToSQL
+	DistinctOnExprList []string
+	ExprList           []string
 }
 
 func (s *SelectClause) Distinct() {
@@ -36,14 +22,14 @@ func (s *SelectClause) DistinctOn(sql string, args *Args, values ...interface{})
 	if len(values) > 0 {
 		sql = args.Format(sql, values...)
 	}
-	s.DistinctOnExprList = append(s.DistinctOnExprList, rawSQL(sql))
+	s.DistinctOnExprList = append(s.DistinctOnExprList, sql)
 }
 
 func (s *SelectClause) Select(sql string, args *Args, values ...interface{}) {
 	if len(values) > 0 {
 		sql = args.Format(sql, values...)
 	}
-	s.ExprList = append(s.ExprList, rawSQL(sql))
+	s.ExprList = append(s.ExprList, sql)
 }
 
 func (s *SelectClause) String() string {
@@ -73,11 +59,11 @@ func (s *SelectClause) writeToSQL(w io.Writer) {
 }
 
 type FromClause struct {
-	Value ToSQL
+	Value string
 }
 
 func (f *FromClause) From(sql string, args *Args, values ...interface{}) {
-	f.Value = rawSQL(args.Format(sql, values...))
+	f.Value = (args.Format(sql, values...))
 }
 
 func (f *FromClause) String() string {
@@ -87,16 +73,16 @@ func (f *FromClause) String() string {
 }
 
 func (f *FromClause) writeToSQL(w io.Writer) {
-	if f.Value == nil {
+	if f.Value == "" {
 		return
 	}
 
 	io.WriteString(w, "from ")
-	f.Value.writeToSQL(w)
+	io.WriteString(w, f.Value)
 }
 
 type WhereClause struct {
-	Cond ToSQL
+	Cond string
 }
 
 func (wc *WhereClause) String() string {
@@ -106,12 +92,12 @@ func (wc *WhereClause) String() string {
 }
 
 func (wc *WhereClause) writeToSQL(w io.Writer) {
-	if wc.Cond == nil {
+	if wc.Cond == "" {
 		return
 	}
 
 	io.WriteString(w, "where ")
-	wc.Cond.writeToSQL(w)
+	io.WriteString(w, wc.Cond)
 }
 
 func (wc *WhereClause) Where(sql string, args *Args, values ...interface{}) {
@@ -119,12 +105,10 @@ func (wc *WhereClause) Where(sql string, args *Args, values ...interface{}) {
 		sql = args.Format(sql, values...)
 	}
 
-	cond := rawSQL(sql)
-
-	if wc.Cond == nil {
-		wc.Cond = cond
+	if wc.Cond == "" {
+		wc.Cond = sql
 	} else {
-		wc.Cond = &And{Left: wc.Cond, Right: cond}
+		wc.Cond = fmt.Sprintf("(%s and %s)", wc.Cond, sql)
 	}
 }
 
@@ -133,62 +117,22 @@ func (wc *WhereClause) Or(sql string, args *Args, values ...interface{}) {
 		sql = args.Format(sql, values...)
 	}
 
-	cond := rawSQL(sql)
-
-	if wc.Cond == nil {
-		wc.Cond = cond
+	if wc.Cond == "" {
+		wc.Cond = sql
 	} else {
-		wc.Cond = &Or{Left: wc.Cond, Right: cond}
+		wc.Cond = fmt.Sprintf("(%s or %s)", wc.Cond, sql)
 	}
 }
 
-type And struct {
-	Left  ToSQL
-	Right ToSQL
-}
-
-func (a *And) String() string {
-	sb := &strings.Builder{}
-	a.writeToSQL(sb)
-	return sb.String()
-}
-
-func (a *And) writeToSQL(w io.Writer) {
-	io.WriteString(w, "(")
-	a.Left.writeToSQL(w)
-	io.WriteString(w, " and ")
-	a.Right.writeToSQL(w)
-	io.WriteString(w, ")")
-}
-
-type Or struct {
-	Left  ToSQL
-	Right ToSQL
-}
-
-func (o *Or) String() string {
-	sb := &strings.Builder{}
-	o.writeToSQL(sb)
-	return sb.String()
-}
-
-func (o *Or) writeToSQL(w io.Writer) {
-	io.WriteString(w, "(")
-	o.Left.writeToSQL(w)
-	io.WriteString(w, " or ")
-	o.Right.writeToSQL(w)
-	io.WriteString(w, ")")
-}
-
 type OrderByClause struct {
-	ExprList []ToSQL
+	ExprList []string
 }
 
 func (o *OrderByClause) OrderBy(sql string, args *Args, values ...interface{}) {
 	if len(values) > 0 {
 		sql = args.Format(sql, values...)
 	}
-	o.ExprList = append(o.ExprList, rawSQL(sql))
+	o.ExprList = append(o.ExprList, sql)
 }
 
 func (o *OrderByClause) String() string {
@@ -207,14 +151,14 @@ func (o *OrderByClause) writeToSQL(w io.Writer) {
 }
 
 type LimitClause struct {
-	Value ToSQL
+	Value string
 }
 
 func (l *LimitClause) Limit(sql string, args *Args, values ...interface{}) {
 	if len(values) > 0 {
 		sql = args.Format(sql, values...)
 	}
-	l.Value = rawSQL(sql)
+	l.Value = sql
 }
 
 func (l *LimitClause) String() string {
@@ -224,23 +168,23 @@ func (l *LimitClause) String() string {
 }
 
 func (l *LimitClause) writeToSQL(w io.Writer) {
-	if l.Value == nil {
+	if l.Value == "" {
 		return
 	}
 
 	io.WriteString(w, "limit ")
-	l.Value.writeToSQL(w)
+	io.WriteString(w, l.Value)
 }
 
 type OffsetClause struct {
-	Value ToSQL
+	Value string
 }
 
 func (o *OffsetClause) Offset(sql string, args *Args, values ...interface{}) {
 	if len(values) > 0 {
 		sql = args.Format(sql, values...)
 	}
-	o.Value = rawSQL(sql)
+	o.Value = (sql)
 }
 
 func (o *OffsetClause) String() string {
@@ -250,19 +194,19 @@ func (o *OffsetClause) String() string {
 }
 
 func (o *OffsetClause) writeToSQL(w io.Writer) {
-	if o.Value == nil {
+	if o.Value == "" {
 		return
 	}
 
 	io.WriteString(w, "offset ")
-	o.Value.writeToSQL(w)
+	io.WriteString(w, o.Value)
 }
 
-func writeExprList(w io.Writer, exprList []ToSQL) {
+func writeExprList(w io.Writer, exprList []string) {
 	for i, e := range exprList {
 		if i > 0 {
 			io.WriteString(w, ", ")
 		}
-		io.WriteString(w, e.String())
+		io.WriteString(w, e)
 	}
 }

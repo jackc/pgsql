@@ -2,6 +2,7 @@
 package pgsql
 
 import (
+	"fmt"
 	"io"
 	"strings"
 )
@@ -25,11 +26,11 @@ func (s *SelectStatement) String() string {
 func (s *SelectStatement) writeToSQL(w io.Writer) {
 	writeCount := 0
 
-	f := func(clause ToSQL) {
+	f := func(clause fmt.Stringer) {
 		if writeCount > 0 {
 			io.WriteString(w, "\n")
 		}
-		clause.writeToSQL(w)
+		io.WriteString(w, clause.String())
 		writeCount += 1
 	}
 
