@@ -3,7 +3,6 @@ package pgsql
 
 import (
 	"fmt"
-	"io"
 	"strings"
 )
 
@@ -34,28 +33,25 @@ func (s *SelectClause) Select(sql string, args *Args, values ...interface{}) {
 
 func (s *SelectClause) String() string {
 	sb := &strings.Builder{}
-	s.writeToSQL(sb)
-	return sb.String()
-}
-
-func (s *SelectClause) writeToSQL(w io.Writer) {
-	io.WriteString(w, "select")
+	sb.WriteString("select")
 	if s.IsDistinct {
-		io.WriteString(w, " distinct")
+		sb.WriteString(" distinct")
 	}
 
 	if len(s.DistinctOnExprList) > 0 {
-		io.WriteString(w, " on (")
-		writeExprList(w, s.DistinctOnExprList)
-		io.WriteString(w, ")")
+		sb.WriteString(" on (")
+		writeExprList(sb, s.DistinctOnExprList)
+		sb.WriteString(")")
 	}
 
-	io.WriteString(w, " ")
+	sb.WriteString(" ")
 	if len(s.ExprList) > 0 {
-		writeExprList(w, s.ExprList)
+		writeExprList(sb, s.ExprList)
 	} else {
-		io.WriteString(w, "*")
+		sb.WriteString("*")
 	}
+
+	return sb.String()
 }
 
 type FromClause struct {
@@ -67,18 +63,11 @@ func (f *FromClause) From(sql string, args *Args, values ...interface{}) {
 }
 
 func (f *FromClause) String() string {
-	sb := &strings.Builder{}
-	f.writeToSQL(sb)
-	return sb.String()
-}
-
-func (f *FromClause) writeToSQL(w io.Writer) {
 	if f.Value == "" {
-		return
+		return ""
 	}
 
-	io.WriteString(w, "from ")
-	io.WriteString(w, f.Value)
+	return "from " + f.Value
 }
 
 type WhereClause struct {
@@ -86,18 +75,11 @@ type WhereClause struct {
 }
 
 func (wc *WhereClause) String() string {
-	sb := &strings.Builder{}
-	wc.writeToSQL(sb)
-	return sb.String()
-}
-
-func (wc *WhereClause) writeToSQL(w io.Writer) {
 	if wc.Cond == "" {
-		return
+		return ""
 	}
 
-	io.WriteString(w, "where ")
-	io.WriteString(w, wc.Cond)
+	return "where " + wc.Cond
 }
 
 func (wc *WhereClause) Where(sql string, args *Args, values ...interface{}) {
@@ -136,18 +118,14 @@ func (o *OrderByClause) OrderBy(sql string, args *Args, values ...interface{}) {
 }
 
 func (o *OrderByClause) String() string {
-	sb := &strings.Builder{}
-	o.writeToSQL(sb)
-	return sb.String()
-}
-
-func (o *OrderByClause) writeToSQL(w io.Writer) {
 	if len(o.ExprList) == 0 {
-		return
+		return ""
 	}
 
-	io.WriteString(w, "order by ")
-	writeExprList(w, o.ExprList)
+	sb := &strings.Builder{}
+	sb.WriteString("order by ")
+	writeExprList(sb, o.ExprList)
+	return sb.String()
 }
 
 type LimitClause struct {
@@ -162,18 +140,11 @@ func (l *LimitClause) Limit(sql string, args *Args, values ...interface{}) {
 }
 
 func (l *LimitClause) String() string {
-	sb := &strings.Builder{}
-	l.writeToSQL(sb)
-	return sb.String()
-}
-
-func (l *LimitClause) writeToSQL(w io.Writer) {
 	if l.Value == "" {
-		return
+		return ""
 	}
 
-	io.WriteString(w, "limit ")
-	io.WriteString(w, l.Value)
+	return "limit " + l.Value
 }
 
 type OffsetClause struct {
@@ -188,25 +159,18 @@ func (o *OffsetClause) Offset(sql string, args *Args, values ...interface{}) {
 }
 
 func (o *OffsetClause) String() string {
-	sb := &strings.Builder{}
-	o.writeToSQL(sb)
-	return sb.String()
-}
-
-func (o *OffsetClause) writeToSQL(w io.Writer) {
 	if o.Value == "" {
-		return
+		return ""
 	}
 
-	io.WriteString(w, "offset ")
-	io.WriteString(w, o.Value)
+	return "offset " + o.Value
 }
 
-func writeExprList(w io.Writer, exprList []string) {
+func writeExprList(sb *strings.Builder, exprList []string) {
 	for i, e := range exprList {
 		if i > 0 {
-			io.WriteString(w, ", ")
+			sb.WriteString(", ")
 		}
-		io.WriteString(w, e)
+		sb.WriteString(e)
 	}
 }
