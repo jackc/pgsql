@@ -2,8 +2,6 @@
 package pgsql
 
 import (
-	"fmt"
-	"io"
 	"strings"
 )
 
@@ -19,42 +17,28 @@ type SelectStatement struct {
 
 func (s *SelectStatement) String() string {
 	sb := &strings.Builder{}
-	s.writeToSQL(sb)
-	return sb.String()
-}
 
-func (s *SelectStatement) writeToSQL(w io.Writer) {
 	writeCount := 0
-
-	f := func(clause fmt.Stringer) {
-		if writeCount > 0 {
-			io.WriteString(w, "\n")
+	f := func(s string) {
+		if s == "" {
+			return
 		}
-		io.WriteString(w, clause.String())
+
+		if writeCount > 0 {
+			sb.WriteString("\n")
+		}
+		sb.WriteString(s)
 		writeCount += 1
 	}
 
-	f(s.SelectClause)
+	f(s.SelectClause.String())
+	f(s.FromClause.String())
+	f(s.WhereClause.String())
+	f(s.OrderByClause.String())
+	f(s.LimitClause.String())
+	f(s.OffsetClause.String())
 
-	if len(s.FromClause) != 0 {
-		f(s.FromClause)
-	}
-
-	if len(s.WhereClause) != 0 {
-		f(s.WhereClause)
-	}
-
-	if len(s.OrderByClause) != 0 {
-		f(s.OrderByClause)
-	}
-
-	if len(s.LimitClause) != 0 {
-		f(s.LimitClause)
-	}
-
-	if len(s.OffsetClause) != 0 {
-		f(s.OffsetClause)
-	}
+	return sb.String()
 }
 
 func (s *SelectStatement) Distinct() *SelectStatement {
