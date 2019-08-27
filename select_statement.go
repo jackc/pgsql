@@ -15,7 +15,7 @@ type SelectStatement struct {
 	OffsetClause  OffsetClause
 }
 
-func (s *SelectStatement) String() string {
+func (s SelectStatement) String() string {
 	sb := &strings.Builder{}
 
 	writeCount := 0
@@ -39,6 +39,11 @@ func (s *SelectStatement) String() string {
 	f(s.OffsetClause.String())
 
 	return sb.String()
+}
+
+func (s SelectStatement) Clone() SelectStatement {
+	s.Args = s.Args.Clone()
+	return s
 }
 
 func (s *SelectStatement) Distinct() *SelectStatement {

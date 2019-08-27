@@ -30,6 +30,39 @@ func TestArgs(t *testing.T) {
 	assert.Equal(t, "array[$3, $1, $2]", args.Format("array[?, ?, ?]", 1, 42, 7))
 }
 
+func TestArgsClone(t *testing.T) {
+	a := &pgsql.Args{}
+	assert.Len(t, a.Values(), 0)
+
+	a.Use(1)
+	a.Use(2)
+	assert.Equal(t, []interface{}{1, 2}, a.Values())
+
+	b := a.Clone()
+	assert.Equal(t, []interface{}{1, 2}, b.Values())
+
+	a.Use(3)
+	b.Use(4)
+	assert.Equal(t, []interface{}{1, 2, 3}, a.Values())
+	assert.Equal(t, []interface{}{1, 2, 4}, b.Values())
+
+	for i := 0; i < 10000; i++ {
+		a.Use(i + 10)
+	}
+
+	assert.Len(t, a.Values(), 10003)
+
+	c := a.Clone()
+	assert.Len(t, c.Values(), 10003)
+
+	a.Use(99999)
+	assert.Len(t, a.Values(), 10004)
+	assert.Len(t, c.Values(), 10003)
+
+	c.Use(99999)
+	assert.Len(t, c.Values(), 10004)
+}
+
 func BenchmarkArgs_1_Uses_1_Values(b *testing.B) {
 	benchmarkArgs(b, 1, 1)
 }

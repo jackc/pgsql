@@ -8,40 +8,65 @@ import (
 )
 
 func TestSelectStatement(t *testing.T) {
-	s := &pgsql.SelectStatement{}
+	a := &pgsql.SelectStatement{}
 
-	s.Select("id")
-	assert.Equal(t, "select id", s.String())
+	a.Select("id")
+	assert.Equal(t, "select id", a.String())
 
-	s.From("users")
+	a.From("users")
 	assert.Equal(t, `select id
-from users`, s.String())
+from users`, a.String())
 
-	s.Where("id=42")
-	assert.Equal(t, `select id
-from users
-where id=42`, s.String())
-
-	s.OrderBy("name")
+	a.Where("id=?", 42)
 	assert.Equal(t, `select id
 from users
-where id=42
-order by name`, s.String())
+where id=$1`, a.String())
 
-	s.Limit("10")
+	a.OrderBy("name")
 	assert.Equal(t, `select id
 from users
-where id=42
+where id=$1
+order by name`, a.String())
+
+	a.Limit("10")
+	assert.Equal(t, `select id
+from users
+where id=$1
 order by name
-limit 10`, s.String())
+limit 10`, a.String())
 
-	s.Offset("5")
+	a.Offset("5")
 	assert.Equal(t, `select id
 from users
-where id=42
+where id=$1
 order by name
 limit 10
-offset 5`, s.String())
+offset 5`, a.String())
+
+	b := a.Clone()
+	b.Where("name=?", "foo")
+	assert.Equal(t, `select id
+from users
+where (id=$1 and name=$2)
+order by name
+limit 10
+offset 5`, b.String())
+
+	assert.Equal(t, `select id
+from users
+where id=$1
+order by name
+limit 10
+offset 5`, a.String())
+
+	a.Where("nickname=?", "bar")
+	assert.Equal(t, `select id
+from users
+where (id=$1 and nickname=$2)
+order by name
+limit 10
+offset 5`, a.String())
+
 }
 
 func TestSelectClause(t *testing.T) {
