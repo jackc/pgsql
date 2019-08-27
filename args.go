@@ -1,7 +1,7 @@
 package pgsql
 
 import (
-	"fmt"
+	"strconv"
 	"strings"
 )
 
@@ -9,8 +9,8 @@ const argsCountSwitchToMap = 32
 
 type Placeholder int32
 
-func (p Placeholder) ToSQL() string {
-	return fmt.Sprintf("$%d", p)
+func (p Placeholder) String() string {
+	return "$" + strconv.FormatInt(int64(p), 10)
 }
 
 type Args struct {
@@ -60,7 +60,7 @@ func (a *Args) Format(s string, values ...interface{}) string {
 		}
 
 		b.WriteString(s[0:pos])
-		b.WriteString(a.Use(values[i]).ToSQL())
+		b.WriteString(a.Use(values[i]).String())
 		s = s[pos+1:]
 	}
 

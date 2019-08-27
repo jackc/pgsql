@@ -8,7 +8,7 @@ import (
 )
 
 func TestPlaceholder(t *testing.T) {
-	assert.Equal(t, "$42", pgsql.Placeholder(42).ToSQL())
+	assert.Equal(t, "$42", pgsql.Placeholder(42).String())
 }
 
 func TestArgs(t *testing.T) {
