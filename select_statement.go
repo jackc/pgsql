@@ -5,18 +5,19 @@ import (
 	"strings"
 )
 
-func Select() *SelectStatement {
-	return &SelectStatement{}
+func Select(sql string, values ...interface{}) *SelectStatement {
+	s := &SelectStatement{Args: &Args{}}
+	return s.Select(sql, values...)
 }
 
 type SelectStatement struct {
-	Args          Args
 	SelectClause  SelectClause
 	FromClause    FromClause
 	WhereClause   WhereClause
 	OrderByClause OrderByClause
 	LimitClause   LimitClause
 	OffsetClause  OffsetClause
+	Args          *Args
 }
 
 func (s *SelectStatement) String() string {
@@ -47,7 +48,7 @@ func (s *SelectStatement) String() string {
 
 func (s *SelectStatement) Clone() *SelectStatement {
 	clone := *s
-	clone.Args = *s.Args.Clone()
+	clone.Args = s.Args.Clone()
 	return &clone
 }
 
@@ -57,41 +58,41 @@ func (s *SelectStatement) Distinct() *SelectStatement {
 }
 
 func (s *SelectStatement) DistinctOn(sql string, values ...interface{}) *SelectStatement {
-	s.SelectClause.DistinctOn(sql, &s.Args, values...)
+	s.SelectClause.DistinctOn(sql, s.Args, values...)
 	return s
 }
 
 func (s *SelectStatement) Select(sql string, values ...interface{}) *SelectStatement {
-	s.SelectClause.Select(sql, &s.Args, values...)
+	s.SelectClause.Select(sql, s.Args, values...)
 	return s
 }
 
 func (s *SelectStatement) From(sql string, values ...interface{}) *SelectStatement {
-	s.FromClause.From(sql, &s.Args, values...)
+	s.FromClause.From(sql, s.Args, values...)
 	return s
 }
 
 func (s *SelectStatement) Where(sql string, values ...interface{}) *SelectStatement {
-	s.WhereClause.Where(sql, &s.Args, values...)
+	s.WhereClause.Where(sql, s.Args, values...)
 	return s
 }
 
 func (s *SelectStatement) WhereOr(sql string, values ...interface{}) *SelectStatement {
-	s.WhereClause.Or(sql, &s.Args, values...)
+	s.WhereClause.Or(sql, s.Args, values...)
 	return s
 }
 
 func (s *SelectStatement) OrderBy(sql string, values ...interface{}) *SelectStatement {
-	s.OrderByClause.OrderBy(sql, &s.Args, values...)
+	s.OrderByClause.OrderBy(sql, s.Args, values...)
 	return s
 }
 
 func (s *SelectStatement) Limit(sql string, values ...interface{}) *SelectStatement {
-	s.LimitClause.Limit(sql, &s.Args, values...)
+	s.LimitClause.Limit(sql, s.Args, values...)
 	return s
 }
 
 func (s *SelectStatement) Offset(sql string, values ...interface{}) *SelectStatement {
-	s.OffsetClause.Offset(sql, &s.Args, values...)
+	s.OffsetClause.Offset(sql, s.Args, values...)
 	return s
 }

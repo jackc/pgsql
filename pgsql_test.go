@@ -8,7 +8,7 @@ import (
 )
 
 func TestSelectStatement(t *testing.T) {
-	a := &pgsql.SelectStatement{}
+	a := pgsql.Select("")
 
 	a.Select("id")
 	assert.Equal(t, "select id", a.String())
