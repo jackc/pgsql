@@ -5,6 +5,10 @@ import (
 	"strings"
 )
 
+func Select() *SelectStatement {
+	return &SelectStatement{}
+}
+
 type SelectStatement struct {
 	Args          Args
 	SelectClause  SelectClause
@@ -15,7 +19,7 @@ type SelectStatement struct {
 	OffsetClause  OffsetClause
 }
 
-func (s SelectStatement) String() string {
+func (s *SelectStatement) String() string {
 	sb := &strings.Builder{}
 
 	writeCount := 0
@@ -41,9 +45,10 @@ func (s SelectStatement) String() string {
 	return sb.String()
 }
 
-func (s SelectStatement) Clone() SelectStatement {
-	s.Args = s.Args.Clone()
-	return s
+func (s *SelectStatement) Clone() *SelectStatement {
+	clone := *s
+	clone.Args = *s.Args.Clone()
+	return &clone
 }
 
 func (s *SelectStatement) Distinct() *SelectStatement {

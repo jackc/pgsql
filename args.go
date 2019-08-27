@@ -45,7 +45,7 @@ func (a *Args) Use(v interface{}) Placeholder {
 	return p
 }
 
-func (a Args) Values() []interface{} {
+func (a *Args) Values() []interface{} {
 	return a.values
 }
 
@@ -67,7 +67,7 @@ func (a *Args) Format(s string, values ...interface{}) string {
 	return b.String()
 }
 
-func (a Args) existingPlaceholder(v interface{}) (p Placeholder, present bool) {
+func (a *Args) existingPlaceholder(v interface{}) (p Placeholder, present bool) {
 	if a.valuesToPlaceholder != nil {
 		p, present = a.valuesToPlaceholder[v]
 		return p, present
@@ -82,8 +82,8 @@ func (a Args) existingPlaceholder(v interface{}) (p Placeholder, present bool) {
 	return 0, false
 }
 
-func (a Args) Clone() Args {
-	b := Args{}
+func (a *Args) Clone() *Args {
+	b := &Args{}
 
 	b.values = make([]interface{}, len(a.values))
 	copy(b.values, a.values)
