@@ -1,4 +1,3 @@
-// Package pgsql helps build SQL queries.
 package pgsql
 
 import (
