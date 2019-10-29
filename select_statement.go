@@ -9,6 +9,11 @@ func Select(sql string, values ...interface{}) *SelectStatement {
 	return s.Select(sql, values...)
 }
 
+func Where(sql string, values ...interface{}) *SelectStatement {
+	s := &SelectStatement{Args: &Args{}}
+	return s.Where(sql, values...)
+}
+
 type SelectStatement struct {
 	SelectClause  SelectClause
 	FromClause    FromClause
