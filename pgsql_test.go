@@ -5,37 +5,44 @@ import (
 
 	"github.com/jackc/pgsql"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestSelectStatement(t *testing.T) {
-	a := pgsql.Select("")
+	a := pgsql.NewStatement()
 
-	a.Select("id")
+	err := a.Apply(pgsql.Select("id"))
+	require.NoError(t, err)
 	assert.Equal(t, "select id", a.String())
 
-	a.From("users")
+	err = a.Apply(pgsql.From("users"))
+	require.NoError(t, err)
 	assert.Equal(t, `select id
 from users`, a.String())
 
-	a.Where("id=?", 42)
+	err = a.Apply(pgsql.Where("id=?", 42))
+	require.NoError(t, err)
 	assert.Equal(t, `select id
 from users
 where id=$1`, a.String())
 
-	a.OrderBy("name")
+	err = a.Apply(pgsql.OrderBy("name"))
+	require.NoError(t, err)
 	assert.Equal(t, `select id
 from users
 where id=$1
 order by name`, a.String())
 
-	a.Limit("10")
+	err = a.Apply(pgsql.Limit("10"))
+	require.NoError(t, err)
 	assert.Equal(t, `select id
 from users
 where id=$1
 order by name
 limit 10`, a.String())
 
-	a.Offset("5")
+	err = a.Apply(pgsql.Offset("5"))
+	require.NoError(t, err)
 	assert.Equal(t, `select id
 from users
 where id=$1
@@ -44,7 +51,8 @@ limit 10
 offset 5`, a.String())
 
 	b := a.Clone()
-	b.Where("name=?", "foo")
+	err = b.Apply(pgsql.Where("name=?", "foo"))
+	require.NoError(t, err)
 	assert.Equal(t, `select id
 from users
 where (id=$1 and name=$2)
@@ -59,7 +67,8 @@ order by name
 limit 10
 offset 5`, a.String())
 
-	a.Where("nickname=?", "bar")
+	err = a.Apply(pgsql.Where("nickname=?", "bar"))
+	require.NoError(t, err)
 	assert.Equal(t, `select id
 from users
 where (id=$1 and nickname=$2)
@@ -70,81 +79,79 @@ offset 5`, a.String())
 }
 
 func TestSelectClause(t *testing.T) {
-	s := &pgsql.SelectClause{}
+	s := pgsql.NewStatement()
+
 	assert.Equal(t, "select *", s.String(), "empty")
 
-	s.Distinct()
+	err := s.Apply(pgsql.Distinct())
+	require.NoError(t, err)
 	assert.Equal(t, "select distinct *", s.String())
 
-	s.DistinctOn("id", nil)
+	err = s.Apply(pgsql.DistinctOn("id"))
+	require.NoError(t, err)
 	assert.Equal(t, "select distinct on (id) *", s.String())
 
-	s.DistinctOn("name", nil)
+	err = s.Apply(pgsql.DistinctOn("name"))
+	require.NoError(t, err)
 	assert.Equal(t, "select distinct on (id, name) *", s.String())
 
-	s.Select("id", nil)
+	err = s.Apply(pgsql.Select("id"))
+	require.NoError(t, err)
 	assert.Equal(t, "select distinct on (id, name) id", s.String())
 
-	s.Select("name", nil)
+	err = s.Apply(pgsql.Select("name"))
+	require.NoError(t, err)
 	assert.Equal(t, "select distinct on (id, name) id, name", s.String())
 }
 
 func TestFromClause(t *testing.T) {
-	var f pgsql.FromClause
-	assert.Equal(t, "", f.String(), "empty")
+	s := pgsql.NewStatement()
 
-	f.From("users", nil)
-	assert.Equal(t, "from users", f.String())
+	err := s.Apply(pgsql.From("users"))
+	require.NoError(t, err)
+	assert.Equal(t, "select *\nfrom users", s.String())
 }
 
 func TestWhereClause(t *testing.T) {
-	var wc pgsql.WhereClause
-	assert.Equal(t, "", wc.String(), "empty")
+	s := pgsql.NewStatement()
 
-	wc.Where("true", nil)
-	assert.Equal(t, "where true", wc.String())
+	err := s.Apply(pgsql.Where("true"))
+	require.NoError(t, err)
+	assert.Equal(t, "select *\nwhere true", s.String())
 
-	wc.Where("1=1", nil)
-	assert.Equal(t, "where (true and 1=1)", wc.String())
+	err = s.Apply(pgsql.Where("1=1"))
+	require.NoError(t, err)
+	assert.Equal(t, "select *\nwhere (true and 1=1)", s.String())
 
-	wc.Or("1+1=2", nil)
-	assert.Equal(t, "where ((true and 1=1) or 1+1=2)", wc.String())
-}
-
-func TestWhereAndArgs(t *testing.T) {
-	args := &pgsql.Args{}
-
-	var w pgsql.WhereClause
-	w.Where("id=?", args, 42)
-	w.Or("id=?", args, 43)
-
-	assert.Equal(t, "where (id=$1 or id=$2)", w.String())
-	assert.Equal(t, []interface{}{42, 43}, args.Values())
+	err = s.Apply(pgsql.Or("1+1=2"))
+	require.NoError(t, err)
+	assert.Equal(t, "select *\nwhere ((true and 1=1) or 1+1=2)", s.String())
 }
 
 func TestOrderByClause(t *testing.T) {
-	var ob pgsql.OrderByClause
-	assert.Equal(t, "", ob.String(), "empty")
+	s := pgsql.NewStatement()
 
-	ob.OrderBy("1 asc", nil)
-	assert.Equal(t, "order by 1 asc", ob.String())
+	err := s.Apply(pgsql.OrderBy("1 asc"))
+	require.NoError(t, err)
+	assert.Equal(t, "select *\norder by 1 asc", s.String())
 
-	ob.OrderBy("2 desc", nil)
-	assert.Equal(t, "order by 1 asc, 2 desc", ob.String())
+	err = s.Apply(pgsql.OrderBy("2 desc"))
+	require.NoError(t, err)
+	assert.Equal(t, "select *\norder by 1 asc, 2 desc", s.String())
 }
 
 func TestLimitClause(t *testing.T) {
-	var l pgsql.LimitClause
-	assert.Equal(t, "", l.String(), "empty")
+	s := pgsql.NewStatement()
 
-	l.Limit("10", nil)
-	assert.Equal(t, "limit 10", l.String())
+	err := s.Apply(pgsql.Limit("10"))
+	require.NoError(t, err)
+	assert.Equal(t, "select *\nlimit 10", s.String())
 }
 
 func TestOffsetClause(t *testing.T) {
-	var o pgsql.OffsetClause
-	assert.Equal(t, "", o.String(), "empty")
+	s := pgsql.NewStatement()
 
-	o.Offset("10", nil)
-	assert.Equal(t, "offset 10", o.String())
+	err := s.Apply(pgsql.Offset("10"))
+	require.NoError(t, err)
+	assert.Equal(t, "select *\noffset 10", s.String())
 }

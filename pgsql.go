@@ -6,38 +6,129 @@ import (
 	"strings"
 )
 
+type statementType int
+
+const (
+	TypeSelect statementType = iota
+	TypeInsert
+	TypeUpdate
+	TypeDelete
+)
+
+func (st statementType) String() string {
+	return [...]string{"select", "insert", "update", "delete"}[st]
+}
+
+type Statement struct {
+	Type          statementType
+	SelectClause  SelectClause
+	FromClause    FromClause
+	WhereClause   WhereClause
+	OrderByClause OrderByClause
+	LimitClause   LimitClause
+	OffsetClause  OffsetClause
+	Args          *Args
+}
+
+func NewStatement() *Statement {
+	return &Statement{Args: &Args{}}
+}
+
+type StatementOption func(*Statement) error
+
+func (s *Statement) Apply(funcs ...StatementOption) error {
+	for _, f := range funcs {
+		err := f(s)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func (s *Statement) Clone() *Statement {
+	clone := *s
+	clone.Args = s.Args.Clone()
+	return &clone
+}
+
+func (s *Statement) String() string {
+	sb := &strings.Builder{}
+
+	writeCount := 0
+	f := func(s string) {
+		if s == "" {
+			return
+		}
+
+		if writeCount > 0 {
+			sb.WriteString("\n")
+		}
+		sb.WriteString(s)
+		writeCount += 1
+	}
+
+	switch s.Type {
+	case TypeSelect:
+		f(s.SelectClause.String())
+		f(s.FromClause.String())
+		f(s.WhereClause.String())
+		f(s.OrderByClause.String())
+		f(s.LimitClause.String())
+		f(s.OffsetClause.String())
+	default:
+		sb.WriteString("unknown type")
+	}
+
+	return sb.String()
+}
+
 type SelectClause struct {
 	IsDistinct         bool
 	DistinctOnExprList string
 	ExprList           string
 }
 
-func (s *SelectClause) Distinct() {
-	s.IsDistinct = true
-}
-
-func (s *SelectClause) DistinctOn(sql string, args *Args, values ...interface{}) {
-	s.Distinct()
-	if len(values) > 0 {
-		sql = args.Format(sql, values...)
-	}
-
-	if len(s.DistinctOnExprList) > 0 {
-		s.DistinctOnExprList += ", " + sql
-	} else {
-		s.DistinctOnExprList = sql
+func Distinct() StatementOption {
+	return func(s *Statement) error {
+		s.SelectClause.IsDistinct = true
+		return nil
 	}
 }
 
-func (s *SelectClause) Select(sql string, args *Args, values ...interface{}) {
-	if len(values) > 0 {
-		sql = args.Format(sql, values...)
-	}
+func DistinctOn(sql string, values ...interface{}) StatementOption {
+	return func(s *Statement) error {
+		s.SelectClause.IsDistinct = true
 
-	if len(s.ExprList) > 0 {
-		s.ExprList += ", " + sql
-	} else {
-		s.ExprList = sql
+		if len(values) > 0 {
+			sql = s.Args.Format(sql, values...)
+		}
+
+		if len(s.SelectClause.DistinctOnExprList) > 0 {
+			s.SelectClause.DistinctOnExprList += ", " + sql
+		} else {
+			s.SelectClause.DistinctOnExprList = sql
+		}
+
+		return nil
+	}
+}
+
+func Select(sql string, values ...interface{}) StatementOption {
+	return func(s *Statement) error {
+		s.Type = TypeSelect
+		if len(values) > 0 {
+			sql = s.Args.Format(sql, values...)
+		}
+
+		if len(s.SelectClause.ExprList) > 0 {
+			s.SelectClause.ExprList += ", " + sql
+		} else {
+			s.SelectClause.ExprList = sql
+		}
+
+		return nil
 	}
 }
 
@@ -66,8 +157,11 @@ func (s SelectClause) String() string {
 
 type FromClause string
 
-func (f *FromClause) From(sql string, args *Args, values ...interface{}) {
-	*f = FromClause(args.Format(sql, values...))
+func From(sql string, values ...interface{}) StatementOption {
+	return func(s *Statement) error {
+		s.FromClause = FromClause(s.Args.Format(sql, values...))
+		return nil
+	}
 }
 
 func (f FromClause) String() string {
@@ -88,41 +182,53 @@ func (wc WhereClause) String() string {
 	return "where " + string(wc)
 }
 
-func (wc *WhereClause) Where(sql string, args *Args, values ...interface{}) {
-	if len(values) > 0 {
-		sql = args.Format(sql, values...)
-	}
+func Where(sql string, values ...interface{}) StatementOption {
+	return func(s *Statement) error {
+		if len(values) > 0 {
+			sql = s.Args.Format(sql, values...)
+		}
 
-	if len(*wc) == 0 {
-		*wc = WhereClause(sql)
-	} else {
-		*wc = WhereClause(fmt.Sprintf("(%s and %s)", string(*wc), sql))
+		if len(s.WhereClause) == 0 {
+			s.WhereClause = WhereClause(sql)
+		} else {
+			s.WhereClause = WhereClause(fmt.Sprintf("(%s and %s)", string(s.WhereClause), sql))
+		}
+
+		return nil
 	}
 }
 
-func (wc *WhereClause) Or(sql string, args *Args, values ...interface{}) {
-	if len(values) > 0 {
-		sql = args.Format(sql, values...)
-	}
+func Or(sql string, values ...interface{}) StatementOption {
+	return func(s *Statement) error {
+		if len(values) > 0 {
+			sql = s.Args.Format(sql, values...)
+		}
 
-	if len(*wc) == 0 {
-		*wc = WhereClause(sql)
-	} else {
-		*wc = WhereClause(fmt.Sprintf("(%s or %s)", string(*wc), sql))
+		if len(s.WhereClause) == 0 {
+			s.WhereClause = WhereClause(sql)
+		} else {
+			s.WhereClause = WhereClause(fmt.Sprintf("(%s or %s)", string(s.WhereClause), sql))
+		}
+
+		return nil
 	}
 }
 
 type OrderByClause string
 
-func (o *OrderByClause) OrderBy(sql string, args *Args, values ...interface{}) {
-	if len(values) > 0 {
-		sql = args.Format(sql, values...)
-	}
+func OrderBy(sql string, values ...interface{}) StatementOption {
+	return func(s *Statement) error {
+		if len(values) > 0 {
+			sql = s.Args.Format(sql, values...)
+		}
 
-	if len(*o) > 0 {
-		*o = OrderByClause(string(*o) + ", " + sql)
-	} else {
-		*o = OrderByClause(sql)
+		if len(s.OrderByClause) > 0 {
+			s.OrderByClause = OrderByClause(string(s.OrderByClause) + ", " + sql)
+		} else {
+			s.OrderByClause = OrderByClause(sql)
+		}
+
+		return nil
 	}
 }
 
@@ -136,11 +242,15 @@ func (o OrderByClause) String() string {
 
 type LimitClause string
 
-func (l *LimitClause) Limit(sql string, args *Args, values ...interface{}) {
-	if len(values) > 0 {
-		sql = args.Format(sql, values...)
+func Limit(sql string, values ...interface{}) StatementOption {
+	return func(s *Statement) error {
+		if len(values) > 0 {
+			sql = s.Args.Format(sql, values...)
+		}
+		s.LimitClause = LimitClause(sql)
+
+		return nil
 	}
-	*l = LimitClause(sql)
 }
 
 func (l LimitClause) String() string {
@@ -153,11 +263,15 @@ func (l LimitClause) String() string {
 
 type OffsetClause string
 
-func (o *OffsetClause) Offset(sql string, args *Args, values ...interface{}) {
-	if len(values) > 0 {
-		sql = args.Format(sql, values...)
+func Offset(sql string, values ...interface{}) StatementOption {
+	return func(s *Statement) error {
+		if len(values) > 0 {
+			sql = s.Args.Format(sql, values...)
+		}
+		s.OffsetClause = OffsetClause(sql)
+
+		return nil
 	}
-	*o = OffsetClause(sql)
 }
 
 func (o OffsetClause) String() string {
