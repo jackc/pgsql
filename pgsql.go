@@ -3,6 +3,7 @@ package pgsql
 
 import (
 	"fmt"
+	"sort"
 	"strings"
 )
 
@@ -289,4 +290,52 @@ func writeExprList(sb *strings.Builder, exprList []string) {
 		}
 		sb.WriteString(e)
 	}
+}
+
+type AppendBuilder interface {
+	AppendBuild(*strings.Builder, *Args)
+}
+
+type QueryParameter struct {
+	Value interface{}
+}
+
+func (qp *QueryParameter) AppendBuild(sb *strings.Builder, args *Args) {
+	sb.WriteString(args.Use(qp.Value).String())
+}
+
+func Build(ab AppendBuilder) (string, []interface{}) {
+	sb := &strings.Builder{}
+	args := &Args{}
+
+	ab.AppendBuild(sb, args)
+
+	return sb.String(), args.Values()
+}
+
+type RowMap map[string]interface{}
+
+func (rm RowMap) InsertData() ([]string, *ValuesStatement) {
+	keys := rm.sortedKeys()
+
+	values := make([]interface{}, len(keys))
+	for i, k := range keys {
+		values[i] = rm[k]
+	}
+
+	vs := Values()
+	vs.Row(values...)
+
+	return keys, vs
+}
+
+func (rm RowMap) sortedKeys() []string {
+	keys := make([]string, 0, len(rm))
+	for k, _ := range rm {
+		keys = append(keys, k)
+	}
+
+	sort.Strings(keys)
+
+	return keys
 }
