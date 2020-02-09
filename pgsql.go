@@ -296,6 +296,12 @@ type AppendBuilder interface {
 	AppendBuild(*strings.Builder, *Args)
 }
 
+type RawSQL string
+
+func (r RawSQL) AppendBuild(sb *strings.Builder, args *Args) {
+	sb.WriteString(string(r))
+}
+
 type QueryParameter struct {
 	Value interface{}
 }
@@ -327,6 +333,17 @@ func (rm RowMap) InsertData() ([]string, *ValuesStatement) {
 	vs.Row(values...)
 
 	return keys, vs
+}
+
+func (rm RowMap) UpdateData() []*Assignment {
+	keys := rm.sortedKeys()
+
+	assignments := make([]*Assignment, len(keys))
+	for i, k := range keys {
+		assignments[i] = &Assignment{Left: RawSQL(k), Right: &QueryParameter{Value: rm[k]}}
+	}
+
+	return assignments
 }
 
 func (rm RowMap) sortedKeys() []string {
