@@ -12,6 +12,7 @@ type Assignment struct {
 type UpdateStatement struct {
 	tableName   string
 	assignments []*Assignment
+	where       AppendBuilder
 }
 
 func Update(tableName string) *UpdateStatement {
@@ -24,6 +25,15 @@ type Updateable interface {
 
 func (us *UpdateStatement) Set(data Updateable) *UpdateStatement {
 	us.assignments = data.UpdateData()
+	return us
+}
+
+func (us *UpdateStatement) Where(cond AppendBuilder) *UpdateStatement {
+	if us.where == nil {
+		us.where = cond
+	} else {
+		us.where = &BinaryExpr{Left: us.where, Op: "and", Right: cond}
+	}
 	return us
 }
 
@@ -41,5 +51,8 @@ func (us *UpdateStatement) AppendBuild(sb *strings.Builder, args *Args) {
 		a.Right.AppendBuild(sb, args)
 	}
 
-	sb.WriteByte('\n')
+	if us.where != nil {
+		sb.WriteString("\nwhere ")
+		us.where.AppendBuild(sb, args)
+	}
 }

@@ -319,6 +319,22 @@ func Build(ab AppendBuilder) (string, []interface{}) {
 	return sb.String(), args.Values()
 }
 
+type BinaryExpr struct {
+	Left  AppendBuilder
+	Op    string
+	Right AppendBuilder
+}
+
+func (be *BinaryExpr) AppendBuild(sb *strings.Builder, args *Args) {
+	sb.WriteByte('(')
+	be.Left.AppendBuild(sb, args)
+	sb.WriteByte(' ')
+	sb.WriteString(be.Op)
+	sb.WriteByte(' ')
+	be.Right.AppendBuild(sb, args)
+	sb.WriteByte(')')
+}
+
 type RowMap map[string]interface{}
 
 func (rm RowMap) InsertData() ([]string, *ValuesStatement) {
