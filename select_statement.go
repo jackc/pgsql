@@ -15,15 +15,15 @@ type SelectStatement struct {
 	offset        int64
 }
 
-func Selectf(s string, args ...interface{}) *SelectStatement {
-	return (&SelectStatement{}).Selectf(s, args...)
+func Select(s string, args ...interface{}) *SelectStatement {
+	return (&SelectStatement{}).Select(s, args...)
 }
 
 func Fromf(s string, args ...interface{}) *SelectStatement {
 	return (&SelectStatement{}).Fromf(s, args...)
 }
 
-func (ss *SelectStatement) Selectf(s string, args ...interface{}) *SelectStatement {
+func (ss *SelectStatement) Select(s string, args ...interface{}) *SelectStatement {
 	ss.selectClause = fooselectClause{
 		exprList: []SQLWriter{&FormatString{s: s, args: args}},
 	}

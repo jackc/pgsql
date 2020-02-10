@@ -7,8 +7,8 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestSelectf(t *testing.T) {
-	a := pgsql.Selectf("a, b, c")
+func TestSelect(t *testing.T) {
+	a := pgsql.Select("a, b, c")
 	sql, args := pgsql.Build(a)
 	assert.Equal(t, "select a, b, c", sql)
 	assert.Empty(t, args)
@@ -22,35 +22,35 @@ func TestFromf(t *testing.T) {
 }
 
 func TestSelectStatementDistinct(t *testing.T) {
-	a := pgsql.Selectf("a, b, c").Distinct(true)
+	a := pgsql.Select("a, b, c").Distinct(true)
 	sql, args := pgsql.Build(a)
 	assert.Equal(t, "select distinct a, b, c", sql)
 	assert.Empty(t, args)
 }
 
 func TestSelectStatementDistinctOn(t *testing.T) {
-	a := pgsql.Selectf("a, b, c").DistinctOnf("a, b")
+	a := pgsql.Select("a, b, c").DistinctOnf("a, b")
 	sql, args := pgsql.Build(a)
 	assert.Equal(t, "select distinct on (a, b) a, b, c", sql)
 	assert.Empty(t, args)
 }
 
 func TestSelectStatementWhere(t *testing.T) {
-	a := pgsql.Selectf("a, b, c").Fromf("t").Where("foo=?", 42)
+	a := pgsql.Select("a, b, c").Fromf("t").Where("foo=?", 42)
 	sql, args := pgsql.Build(a)
 	assert.Equal(t, "select a, b, c from t where foo=$1", sql)
 	assert.Equal(t, []interface{}{42}, args)
 }
 
 func TestSelectStatementOrder(t *testing.T) {
-	a := pgsql.Selectf("a, b, c").Fromf("t").Orderf("c desc")
+	a := pgsql.Select("a, b, c").Fromf("t").Orderf("c desc")
 	sql, args := pgsql.Build(a)
 	assert.Equal(t, "select a, b, c from t order by c desc", sql)
 	assert.Empty(t, args)
 }
 
 func TestSelectStatementLimitAndOffset(t *testing.T) {
-	a := pgsql.Selectf("a, b, c").Fromf("t").Orderf("c desc")
+	a := pgsql.Select("a, b, c").Fromf("t").Orderf("c desc")
 	a.Limit(5)
 	sql, args := pgsql.Build(a)
 	assert.Equal(t, "select a, b, c from t order by c desc limit 5", sql)
