@@ -56,11 +56,7 @@ func (ss *SelectStatement) Fromf(s string, args ...interface{}) *SelectStatement
 }
 
 func (ss *SelectStatement) Where(cond SQLWriter) *SelectStatement {
-	if ss.where == nil {
-		ss.where = cond
-	} else {
-		ss.where = &binaryExpr{left: ss.where, op: "and", right: cond}
-	}
+	ss.where = whereAnd(ss.where, cond)
 	return ss
 }
 

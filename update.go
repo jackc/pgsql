@@ -37,11 +37,7 @@ func (us *UpdateStatement) Setf(s string, args ...interface{}) *UpdateStatement 
 }
 
 func (us *UpdateStatement) Where(cond SQLWriter) *UpdateStatement {
-	if us.where == nil {
-		us.where = cond
-	} else {
-		us.where = &binaryExpr{left: us.where, op: "and", right: cond}
-	}
+	us.where = whereAnd(us.where, cond)
 	return us
 }
 

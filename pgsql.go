@@ -95,3 +95,11 @@ type FormatString struct {
 func (fs *FormatString) WriteSQL(sb *strings.Builder, args *Args) {
 	sb.WriteString(args.Format(fs.s, fs.args...))
 }
+
+func whereAnd(left SQLWriter, right SQLWriter) SQLWriter {
+	if left == nil {
+		return right
+	} else {
+		return &binaryExpr{left: left, op: "and", right: right}
+	}
+}
