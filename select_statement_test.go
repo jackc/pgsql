@@ -36,7 +36,7 @@ func TestSelectStatementDistinctOn(t *testing.T) {
 }
 
 func TestSelectStatementWhere(t *testing.T) {
-	a := pgsql.Selectf("a, b, c").Fromf("t").Wheref("foo=?", 42)
+	a := pgsql.Selectf("a, b, c").Fromf("t").Where("foo=?", 42)
 	sql, args := pgsql.Build(a)
 	assert.Equal(t, "select a, b, c from t where foo=$1", sql)
 	assert.Equal(t, []interface{}{42}, args)

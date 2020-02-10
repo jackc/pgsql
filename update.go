@@ -36,13 +36,9 @@ func (us *UpdateStatement) Setf(s string, args ...interface{}) *UpdateStatement 
 	return us
 }
 
-func (us *UpdateStatement) Where(cond SQLWriter) *UpdateStatement {
-	us.where = whereAnd(us.where, cond)
+func (us *UpdateStatement) Where(s string, args ...interface{}) *UpdateStatement {
+	us.where = whereAnd(us.where, &FormatString{s: s, args: args})
 	return us
-}
-
-func (us *UpdateStatement) Wheref(s string, args ...interface{}) *UpdateStatement {
-	return us.Where(&FormatString{s: s, args: args})
 }
 
 func (us *UpdateStatement) WriteSQL(sb *strings.Builder, args *Args) {

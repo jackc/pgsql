@@ -13,13 +13,9 @@ func Delete(tableName string) *DeleteStatement {
 	return &DeleteStatement{tableName: tableName}
 }
 
-func (ds *DeleteStatement) Where(cond SQLWriter) *DeleteStatement {
-	ds.where = whereAnd(ds.where, cond)
+func (ds *DeleteStatement) Where(s string, args ...interface{}) *DeleteStatement {
+	ds.where = whereAnd(ds.where, &FormatString{s: s, args: args})
 	return ds
-}
-
-func (ds *DeleteStatement) Wheref(s string, args ...interface{}) *DeleteStatement {
-	return ds.Where(&FormatString{s: s, args: args})
 }
 
 func (ds *DeleteStatement) WriteSQL(sb *strings.Builder, args *Args) {

@@ -55,13 +55,9 @@ func (ss *SelectStatement) Fromf(s string, args ...interface{}) *SelectStatement
 	return ss
 }
 
-func (ss *SelectStatement) Where(cond SQLWriter) *SelectStatement {
-	ss.where = whereAnd(ss.where, cond)
+func (ss *SelectStatement) Where(s string, args ...interface{}) *SelectStatement {
+	ss.where = whereAnd(ss.where, &FormatString{s: s, args: args})
 	return ss
-}
-
-func (ss *SelectStatement) Wheref(s string, args ...interface{}) *SelectStatement {
-	return ss.Where(&FormatString{s: s, args: args})
 }
 
 func (ss *SelectStatement) Order(order SQLWriter) *SelectStatement {

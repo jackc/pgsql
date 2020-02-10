@@ -26,10 +26,10 @@ set name=$1, age=$2`, sql)
 	assert.Equal(t, []interface{}{"Alice", 30}, args)
 }
 
-func TestUpdateStatementWheref(t *testing.T) {
+func TestUpdateStatementWhere(t *testing.T) {
 	a := pgsql.Update("people")
 	a.Set(pgsql.RowMap{"name": "Alice", "age": 30})
-	a.Wheref("id=?", 42)
+	a.Where("id=?", 42)
 	sql, args := pgsql.Build(a)
 	assert.Equal(t, `update people
 set age = $1,
@@ -37,7 +37,7 @@ name = $2
 where id=$3`, sql)
 	assert.Equal(t, []interface{}{30, "Alice", 42}, args)
 
-	a.Wheref("foo=?", 43)
+	a.Where("foo=?", 43)
 	sql, args = pgsql.Build(a)
 	assert.Equal(t, `update people
 set age = $1,

@@ -14,9 +14,9 @@ func TestDeleteStatement(t *testing.T) {
 	assert.Empty(t, args)
 }
 
-func TestDeleteStatementWheref(t *testing.T) {
+func TestDeleteStatementWhere(t *testing.T) {
 	a := pgsql.Delete("people")
-	a.Wheref("foo=?", 43)
+	a.Where("foo=?", 43)
 	sql, args := pgsql.Build(a)
 	assert.Equal(t, `delete from people where foo=$1`, sql)
 	assert.Equal(t, []interface{}{43}, args)
