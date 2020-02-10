@@ -59,7 +59,7 @@ func (ss *SelectStatement) Where(cond SQLWriter) *SelectStatement {
 	if ss.where == nil {
 		ss.where = cond
 	} else {
-		ss.where = &BinaryExpr{Left: ss.where, Op: "and", Right: cond}
+		ss.where = &binaryExpr{left: ss.where, op: "and", right: cond}
 	}
 	return ss
 }

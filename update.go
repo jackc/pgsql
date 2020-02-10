@@ -40,7 +40,7 @@ func (us *UpdateStatement) Where(cond SQLWriter) *UpdateStatement {
 	if us.where == nil {
 		us.where = cond
 	} else {
-		us.where = &BinaryExpr{Left: us.where, Op: "and", Right: cond}
+		us.where = &binaryExpr{left: us.where, op: "and", right: cond}
 	}
 	return us
 }

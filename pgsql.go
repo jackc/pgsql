@@ -10,17 +10,17 @@ type SQLWriter interface {
 	WriteSQL(*strings.Builder, *Args)
 }
 
-type RawSQL string
+type rawSQL string
 
-func (r RawSQL) WriteSQL(sb *strings.Builder, args *Args) {
+func (r rawSQL) WriteSQL(sb *strings.Builder, args *Args) {
 	sb.WriteString(string(r))
 }
 
-type QueryParameter struct {
+type queryParameter struct {
 	Value interface{}
 }
 
-func (qp *QueryParameter) WriteSQL(sb *strings.Builder, args *Args) {
+func (qp *queryParameter) WriteSQL(sb *strings.Builder, args *Args) {
 	sb.WriteString(args.Use(qp.Value).String())
 }
 
@@ -33,19 +33,19 @@ func Build(ab SQLWriter) (string, []interface{}) {
 	return sb.String(), args.Values()
 }
 
-type BinaryExpr struct {
-	Left  SQLWriter
-	Op    string
-	Right SQLWriter
+type binaryExpr struct {
+	left  SQLWriter
+	op    string
+	right SQLWriter
 }
 
-func (be *BinaryExpr) WriteSQL(sb *strings.Builder, args *Args) {
+func (be *binaryExpr) WriteSQL(sb *strings.Builder, args *Args) {
 	sb.WriteByte('(')
-	be.Left.WriteSQL(sb, args)
+	be.left.WriteSQL(sb, args)
 	sb.WriteByte(' ')
-	sb.WriteString(be.Op)
+	sb.WriteString(be.op)
 	sb.WriteByte(' ')
-	be.Right.WriteSQL(sb, args)
+	be.right.WriteSQL(sb, args)
 	sb.WriteByte(')')
 }
 
@@ -70,7 +70,7 @@ func (rm RowMap) UpdateData() []*Assignment {
 
 	assignments := make([]*Assignment, len(keys))
 	for i, k := range keys {
-		assignments[i] = &Assignment{Left: RawSQL(k), Right: &QueryParameter{Value: rm[k]}}
+		assignments[i] = &Assignment{Left: rawSQL(k), Right: &queryParameter{Value: rm[k]}}
 	}
 
 	return assignments
