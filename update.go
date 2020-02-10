@@ -44,14 +44,14 @@ func (us *UpdateStatement) Where(s string, args ...interface{}) *UpdateStatement
 func (us *UpdateStatement) WriteSQL(sb *strings.Builder, args *Args) {
 	sb.WriteString("update ")
 	sb.WriteString(us.tableName)
-	sb.WriteString("\nset ")
+	sb.WriteString(" set ")
 
 	if us.setf != nil {
 		us.setf.WriteSQL(sb, args)
 	} else {
 		for i, a := range us.assignments {
 			if i > 0 {
-				sb.WriteString(",\n")
+				sb.WriteString(", ")
 			}
 			a.Left.WriteSQL(sb, args)
 			sb.WriteString(" = ")

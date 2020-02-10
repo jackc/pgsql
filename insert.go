@@ -52,7 +52,7 @@ func (is *InsertStatement) WriteSQL(sb *strings.Builder, args *Args) {
 	}
 
 	if is.values != nil {
-		sb.WriteByte('\n')
+		sb.WriteByte(' ')
 		is.values.WriteSQL(sb, args)
 	}
 }

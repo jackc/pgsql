@@ -24,7 +24,7 @@ func TestInsertStatement(t *testing.T) {
 	a.Values(vs)
 
 	sql, args = pgsql.Build(a)
-	assert.Equal(t, "insert into people (name, age)\nvalues ($1,$2),\n($3,$4)", sql)
+	assert.Equal(t, "insert into people (name, age) values ($1,$2), ($3,$4)", sql)
 	assert.Equal(t, []interface{}{"Alice", 30, "Bob", 32}, args)
 }
 
@@ -36,6 +36,6 @@ func TestInsertStatementData(t *testing.T) {
 
 	a.Data(pgsql.RowMap{"name": "Alice", "age": 30})
 	sql, args = pgsql.Build(a)
-	assert.Equal(t, "insert into people (age, name)\nvalues ($1,$2)", sql)
+	assert.Equal(t, "insert into people (age, name) values ($1,$2)", sql)
 	assert.Equal(t, []interface{}{30, "Alice"}, args)
 }

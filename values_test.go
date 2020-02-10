@@ -22,6 +22,6 @@ func TestValuesStatementMultipleRows(t *testing.T) {
 	v.Row("c", "d")
 
 	sql, args := pgsql.Build(v)
-	assert.Equal(t, "values ($1,$2),\n($3,$4)", sql)
+	assert.Equal(t, "values ($1,$2), ($3,$4)", sql)
 	assert.Equal(t, []interface{}{"a", "b", "c", "d"}, args)
 }

@@ -32,7 +32,7 @@ func (vs *ValuesStatement) WriteSQL(sb *strings.Builder, args *Args) {
 	sb.WriteString("values ")
 	for i, row := range vs.rows {
 		if i > 0 {
-			sb.WriteString(",\n")
+			sb.WriteString(", ")
 		}
 		sb.WriteByte('(')
 		for j, v := range row {
