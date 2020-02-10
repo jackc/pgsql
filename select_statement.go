@@ -7,12 +7,16 @@ import (
 )
 
 type SelectStatement struct {
-	selectClause  selectClause
-	fromClause    fromClause
-	where         SQLWriter
-	orderByClause orderClause
-	limit         int64
-	offset        int64
+	// select clause
+	isDistinct     bool
+	distinctOnList []SQLWriter
+	selectList     []SQLWriter
+
+	from        SQLWriter
+	where       SQLWriter
+	orderByList []SQLWriter
+	limit       int64
+	offset      int64
 }
 
 func Select(s string, args ...interface{}) *SelectStatement {
@@ -24,30 +28,27 @@ func From(s string, args ...interface{}) *SelectStatement {
 }
 
 func (ss *SelectStatement) Select(s string, args ...interface{}) *SelectStatement {
-	ss.selectClause.exprList = append(ss.selectClause.exprList, &FormatString{s: s, args: args})
+	ss.selectList = append(ss.selectList, &FormatString{s: s, args: args})
 	return ss
 }
 
 func (ss *SelectStatement) Distinct(b bool) *SelectStatement {
-	ss.selectClause.isDistinct = b
+	ss.isDistinct = b
 	if !b {
-		ss.selectClause.distinctOnExprList = nil
+		ss.distinctOnList = nil
 	}
 
 	return ss
 }
 
 func (ss *SelectStatement) DistinctOn(s string, args ...interface{}) *SelectStatement {
-	ss.selectClause.isDistinct = true
-	ss.selectClause.distinctOnExprList = append(ss.selectClause.distinctOnExprList, &FormatString{s: s, args: args})
+	ss.isDistinct = true
+	ss.distinctOnList = append(ss.distinctOnList, &FormatString{s: s, args: args})
 	return ss
 }
 
 func (ss *SelectStatement) From(s string, args ...interface{}) *SelectStatement {
-	ss.fromClause = fromClause{
-		from: &FormatString{s: s, args: args},
-	}
-
+	ss.from = &FormatString{s: s, args: args}
 	return ss
 }
 
@@ -57,7 +58,7 @@ func (ss *SelectStatement) Where(s string, args ...interface{}) *SelectStatement
 }
 
 func (ss *SelectStatement) Order(s string, args ...interface{}) *SelectStatement {
-	ss.orderByClause.exprList = append(ss.orderByClause.exprList, &FormatString{s: s, args: args})
+	ss.orderByList = append(ss.orderByList, &FormatString{s: s, args: args})
 	return ss
 }
 
@@ -72,38 +73,14 @@ func (ss *SelectStatement) Offset(n int64) *SelectStatement {
 }
 
 func (ss *SelectStatement) WriteSQL(sb *strings.Builder, args *Args) {
-	ss.selectClause.WriteSQL(sb, args)
-	ss.fromClause.WriteSQL(sb, args)
-	if ss.where != nil {
-		sb.WriteString(" where ")
-		ss.where.WriteSQL(sb, args)
-	}
-	ss.orderByClause.WriteSQL(sb, args)
-	if ss.limit != 0 {
-		sb.WriteString(" limit ")
-		sb.WriteString(strconv.FormatInt(ss.limit, 10))
-	}
-	if ss.offset != 0 {
-		sb.WriteString(" offset ")
-		sb.WriteString(strconv.FormatInt(ss.offset, 10))
-	}
-}
-
-type selectClause struct {
-	isDistinct         bool
-	distinctOnExprList []SQLWriter
-	exprList           []SQLWriter
-}
-
-func (s selectClause) WriteSQL(sb *strings.Builder, args *Args) {
 	sb.WriteString("select")
-	if s.isDistinct {
+	if ss.isDistinct {
 		sb.WriteString(" distinct")
 	}
 
-	if len(s.distinctOnExprList) > 0 {
+	if len(ss.distinctOnList) > 0 {
 		sb.WriteString(" on (")
-		for i, e := range s.distinctOnExprList {
+		for i, e := range ss.distinctOnList {
 			if i > 0 {
 				sb.WriteString(", ")
 			}
@@ -113,8 +90,8 @@ func (s selectClause) WriteSQL(sb *strings.Builder, args *Args) {
 	}
 
 	sb.WriteString(" ")
-	if len(s.exprList) > 0 {
-		for i, e := range s.exprList {
+	if len(ss.selectList) > 0 {
+		for i, e := range ss.selectList {
 			if i > 0 {
 				sb.WriteString(", ")
 			}
@@ -123,35 +100,33 @@ func (s selectClause) WriteSQL(sb *strings.Builder, args *Args) {
 	} else {
 		sb.WriteString("*")
 	}
-}
 
-type fromClause struct {
-	from SQLWriter
-}
-
-func (f fromClause) WriteSQL(sb *strings.Builder, args *Args) {
-	if f.from == nil {
-		return
+	if ss.from != nil {
+		sb.WriteString(" from ")
+		ss.from.WriteSQL(sb, args)
 	}
 
-	sb.WriteString(" from ")
-	f.from.WriteSQL(sb, args)
-}
-
-type orderClause struct {
-	exprList []SQLWriter
-}
-
-func (o orderClause) WriteSQL(sb *strings.Builder, args *Args) {
-	if len(o.exprList) == 0 {
-		return
+	if ss.where != nil {
+		sb.WriteString(" where ")
+		ss.where.WriteSQL(sb, args)
 	}
 
-	sb.WriteString(" order by ")
-	for i, e := range o.exprList {
-		if i > 0 {
-			sb.WriteString(", ")
+	if len(ss.orderByList) > 0 {
+		sb.WriteString(" order by ")
+		for i, e := range ss.orderByList {
+			if i > 0 {
+				sb.WriteString(", ")
+			}
+			e.WriteSQL(sb, args)
 		}
-		e.WriteSQL(sb, args)
+	}
+
+	if ss.limit != 0 {
+		sb.WriteString(" limit ")
+		sb.WriteString(strconv.FormatInt(ss.limit, 10))
+	}
+	if ss.offset != 0 {
+		sb.WriteString(" offset ")
+		sb.WriteString(strconv.FormatInt(ss.offset, 10))
 	}
 }
