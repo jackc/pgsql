@@ -29,8 +29,13 @@ func TestSelectStatementDistinct(t *testing.T) {
 }
 
 func TestSelectStatementDistinctOn(t *testing.T) {
-	a := pgsql.Select("a, b, c").DistinctOn("a, b")
+	a := pgsql.Select("a, b, c").DistinctOn("a")
 	sql, args := pgsql.Build(a)
+	assert.Equal(t, "select distinct on (a) a, b, c", sql)
+	assert.Empty(t, args)
+
+	a.DistinctOn("b")
+	sql, args = pgsql.Build(a)
 	assert.Equal(t, "select distinct on (a, b) a, b, c", sql)
 	assert.Empty(t, args)
 }

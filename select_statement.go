@@ -39,8 +39,7 @@ func (ss *SelectStatement) Distinct(b bool) *SelectStatement {
 
 func (ss *SelectStatement) DistinctOn(s string, args ...interface{}) *SelectStatement {
 	ss.selectClause.isDistinct = true
-	ss.selectClause.distinctOnExprList = []SQLWriter{&FormatString{s: s, args: args}}
-
+	ss.selectClause.distinctOnExprList = append(ss.selectClause.distinctOnExprList, &FormatString{s: s, args: args})
 	return ss
 }
 
