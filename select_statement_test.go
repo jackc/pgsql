@@ -21,6 +21,13 @@ func TestFrom(t *testing.T) {
 	assert.Empty(t, args)
 }
 
+func TestWhere(t *testing.T) {
+	a := pgsql.Where("id=?", 2).From("people")
+	sql, args := pgsql.Build(a)
+	assert.Equal(t, "select * from people where id=$1", sql)
+	assert.Equal(t, []interface{}{2}, args)
+}
+
 func TestSelectStatementDistinct(t *testing.T) {
 	a := pgsql.Select("a, b, c").Distinct(true)
 	sql, args := pgsql.Build(a)
