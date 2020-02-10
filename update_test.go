@@ -17,6 +17,15 @@ name = $2`, sql)
 	assert.Equal(t, []interface{}{30, "Alice"}, args)
 }
 
+func TestUpdateStatementSetf(t *testing.T) {
+	a := pgsql.Update("people")
+	a.Setf("name=?, age=?", "Alice", 30)
+	sql, args := pgsql.Build(a)
+	assert.Equal(t, `update people
+set name=$1, age=$2`, sql)
+	assert.Equal(t, []interface{}{"Alice", 30}, args)
+}
+
 func TestUpdateStatementWhere(t *testing.T) {
 	a := pgsql.Update("people")
 	a.Set(pgsql.RowMap{"name": "Alice", "age": 30})
