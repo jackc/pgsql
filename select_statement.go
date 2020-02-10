@@ -19,8 +19,8 @@ func Select(s string, args ...interface{}) *SelectStatement {
 	return (&SelectStatement{}).Select(s, args...)
 }
 
-func Fromf(s string, args ...interface{}) *SelectStatement {
-	return (&SelectStatement{}).Fromf(s, args...)
+func From(s string, args ...interface{}) *SelectStatement {
+	return (&SelectStatement{}).From(s, args...)
 }
 
 func (ss *SelectStatement) Select(s string, args ...interface{}) *SelectStatement {
@@ -43,7 +43,7 @@ func (ss *SelectStatement) DistinctOn(s string, args ...interface{}) *SelectStat
 	return ss
 }
 
-func (ss *SelectStatement) Fromf(s string, args ...interface{}) *SelectStatement {
+func (ss *SelectStatement) From(s string, args ...interface{}) *SelectStatement {
 	ss.fromClause = foofromClause{
 		from: &FormatString{s: s, args: args},
 	}

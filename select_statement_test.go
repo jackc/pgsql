@@ -14,8 +14,8 @@ func TestSelect(t *testing.T) {
 	assert.Empty(t, args)
 }
 
-func TestFromf(t *testing.T) {
-	a := pgsql.Fromf("people")
+func TestFrom(t *testing.T) {
+	a := pgsql.From("people")
 	sql, args := pgsql.Build(a)
 	assert.Equal(t, "select * from people", sql)
 	assert.Empty(t, args)
@@ -48,21 +48,21 @@ func TestSelectStatementMultipleSelect(t *testing.T) {
 }
 
 func TestSelectStatementWhere(t *testing.T) {
-	a := pgsql.Select("a, b, c").Fromf("t").Where("foo=?", 42)
+	a := pgsql.Select("a, b, c").From("t").Where("foo=?", 42)
 	sql, args := pgsql.Build(a)
 	assert.Equal(t, "select a, b, c from t where foo=$1", sql)
 	assert.Equal(t, []interface{}{42}, args)
 }
 
 func TestSelectStatementOrder(t *testing.T) {
-	a := pgsql.Select("a, b, c").Fromf("t").Orderf("c desc")
+	a := pgsql.Select("a, b, c").From("t").Orderf("c desc")
 	sql, args := pgsql.Build(a)
 	assert.Equal(t, "select a, b, c from t order by c desc", sql)
 	assert.Empty(t, args)
 }
 
 func TestSelectStatementLimitAndOffset(t *testing.T) {
-	a := pgsql.Select("a, b, c").Fromf("t").Orderf("c desc")
+	a := pgsql.Select("a, b, c").From("t").Orderf("c desc")
 	a.Limit(5)
 	sql, args := pgsql.Build(a)
 	assert.Equal(t, "select a, b, c from t order by c desc limit 5", sql)
