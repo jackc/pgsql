@@ -37,7 +37,7 @@ func (ss *SelectStatement) Distinct(b bool) *SelectStatement {
 	return ss
 }
 
-func (ss *SelectStatement) DistinctOnf(s string, args ...interface{}) *SelectStatement {
+func (ss *SelectStatement) DistinctOn(s string, args ...interface{}) *SelectStatement {
 	ss.selectClause.isDistinct = true
 	ss.selectClause.distinctOnExprList = []SQLWriter{&FormatString{s: s, args: args}}
 
