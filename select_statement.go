@@ -7,10 +7,10 @@ import (
 )
 
 type SelectStatement struct {
-	selectClause  fooselectClause
-	fromClause    foofromClause
+	selectClause  selectClause
+	fromClause    fromClause
 	where         SQLWriter
-	orderByClause fooorderClause
+	orderByClause orderClause
 	limit         int64
 	offset        int64
 }
@@ -44,7 +44,7 @@ func (ss *SelectStatement) DistinctOn(s string, args ...interface{}) *SelectStat
 }
 
 func (ss *SelectStatement) From(s string, args ...interface{}) *SelectStatement {
-	ss.fromClause = foofromClause{
+	ss.fromClause = fromClause{
 		from: &FormatString{s: s, args: args},
 	}
 
@@ -89,13 +89,13 @@ func (ss *SelectStatement) WriteSQL(sb *strings.Builder, args *Args) {
 	}
 }
 
-type fooselectClause struct {
+type selectClause struct {
 	isDistinct         bool
 	distinctOnExprList []SQLWriter
 	exprList           []SQLWriter
 }
 
-func (s fooselectClause) WriteSQL(sb *strings.Builder, args *Args) {
+func (s selectClause) WriteSQL(sb *strings.Builder, args *Args) {
 	sb.WriteString("select")
 	if s.isDistinct {
 		sb.WriteString(" distinct")
@@ -125,11 +125,11 @@ func (s fooselectClause) WriteSQL(sb *strings.Builder, args *Args) {
 	}
 }
 
-type foofromClause struct {
+type fromClause struct {
 	from SQLWriter
 }
 
-func (f foofromClause) WriteSQL(sb *strings.Builder, args *Args) {
+func (f fromClause) WriteSQL(sb *strings.Builder, args *Args) {
 	if f.from == nil {
 		return
 	}
@@ -138,11 +138,11 @@ func (f foofromClause) WriteSQL(sb *strings.Builder, args *Args) {
 	f.from.WriteSQL(sb, args)
 }
 
-type fooorderClause struct {
+type orderClause struct {
 	exprList []SQLWriter
 }
 
-func (o fooorderClause) WriteSQL(sb *strings.Builder, args *Args) {
+func (o orderClause) WriteSQL(sb *strings.Builder, args *Args) {
 	if len(o.exprList) == 0 {
 		return
 	}
