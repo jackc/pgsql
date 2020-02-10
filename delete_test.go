@@ -18,6 +18,6 @@ func TestDeleteStatementWhere(t *testing.T) {
 	a := pgsql.Delete("people")
 	a.Where("foo=?", 43)
 	sql, args := pgsql.Build(a)
-	assert.Equal(t, `delete from people where foo=$1`, sql)
+	assert.Equal(t, `delete from people where (foo=$1)`, sql)
 	assert.Equal(t, []interface{}{43}, args)
 }

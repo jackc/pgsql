@@ -13,7 +13,7 @@ type SelectStatement struct {
 	selectList     []SQLWriter
 
 	from        SQLWriter
-	where       SQLWriter
+	whereList   whereList
 	orderByList []SQLWriter
 	limit       int64
 	offset      int64
@@ -57,7 +57,7 @@ func (ss *SelectStatement) From(s string, args ...interface{}) *SelectStatement 
 }
 
 func (ss *SelectStatement) Where(s string, args ...interface{}) *SelectStatement {
-	ss.where = whereAnd(ss.where, &FormatString{s: s, args: args})
+	ss.whereList = append(ss.whereList, &FormatString{s: s, args: args})
 	return ss
 }
 
@@ -110,10 +110,7 @@ func (ss *SelectStatement) WriteSQL(sb *strings.Builder, args *Args) {
 		ss.from.WriteSQL(sb, args)
 	}
 
-	if ss.where != nil {
-		sb.WriteString(" where ")
-		ss.where.WriteSQL(sb, args)
-	}
+	ss.whereList.WriteSQL(sb, args)
 
 	if len(ss.orderByList) > 0 {
 		sb.WriteString(" order by ")

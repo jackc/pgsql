@@ -24,7 +24,7 @@ func TestFrom(t *testing.T) {
 func TestWhere(t *testing.T) {
 	a := pgsql.Where("id=?", 2).From("people")
 	sql, args := pgsql.Build(a)
-	assert.Equal(t, "select * from people where id=$1", sql)
+	assert.Equal(t, "select * from people where (id=$1)", sql)
 	assert.Equal(t, []interface{}{2}, args)
 }
 
@@ -57,7 +57,7 @@ func TestSelectStatementMultipleSelect(t *testing.T) {
 func TestSelectStatementWhere(t *testing.T) {
 	a := pgsql.Select("a, b, c").From("t").Where("foo=?", 42)
 	sql, args := pgsql.Build(a)
-	assert.Equal(t, "select a, b, c from t where foo=$1", sql)
+	assert.Equal(t, "select a, b, c from t where (foo=$1)", sql)
 	assert.Equal(t, []interface{}{42}, args)
 }
 

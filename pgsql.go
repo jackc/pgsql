@@ -96,10 +96,21 @@ func (fs *FormatString) WriteSQL(sb *strings.Builder, args *Args) {
 	sb.WriteString(args.Format(fs.s, fs.args...))
 }
 
-func whereAnd(left SQLWriter, right SQLWriter) SQLWriter {
-	if left == nil {
-		return right
-	} else {
-		return &binaryExpr{left: left, op: "and", right: right}
+type whereList []SQLWriter
+
+func (wl whereList) WriteSQL(sb *strings.Builder, args *Args) {
+	if len(wl) == 0 {
+		return
+	}
+
+	sb.WriteString(" where ")
+
+	for i, expr := range wl {
+		if i > 0 {
+			sb.WriteString(" and ")
+		}
+		sb.WriteByte('(')
+		expr.WriteSQL(sb, args)
+		sb.WriteByte(')')
 	}
 }

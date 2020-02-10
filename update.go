@@ -13,7 +13,7 @@ type UpdateStatement struct {
 	tableName   string
 	setf        *FormatString
 	assignments []*Assignment
-	where       SQLWriter
+	whereList   whereList
 }
 
 func Update(tableName string) *UpdateStatement {
@@ -37,7 +37,7 @@ func (us *UpdateStatement) Setf(s string, args ...interface{}) *UpdateStatement 
 }
 
 func (us *UpdateStatement) Where(s string, args ...interface{}) *UpdateStatement {
-	us.where = whereAnd(us.where, &FormatString{s: s, args: args})
+	us.whereList = append(us.whereList, &FormatString{s: s, args: args})
 	return us
 }
 
@@ -59,8 +59,5 @@ func (us *UpdateStatement) WriteSQL(sb *strings.Builder, args *Args) {
 		}
 	}
 
-	if us.where != nil {
-		sb.WriteString("\nwhere ")
-		us.where.WriteSQL(sb, args)
-	}
+	us.whereList.WriteSQL(sb, args)
 }
