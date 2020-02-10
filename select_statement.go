@@ -76,6 +76,26 @@ func (ss *SelectStatement) Offset(n int64) *SelectStatement {
 	return ss
 }
 
+// Merge merges other's from, where, order, limit and offset if they are set.
+func (ss *SelectStatement) Merge(other *SelectStatement) *SelectStatement {
+	if other.from != nil {
+		ss.from = other.from
+	}
+
+	ss.whereList = append(ss.whereList, other.whereList...)
+	ss.orderByList = append(ss.orderByList, other.orderByList...)
+
+	if other.limit != 0 {
+		ss.limit = other.limit
+	}
+
+	if other.offset != 0 {
+		ss.offset = other.offset
+	}
+
+	return ss
+}
+
 func (ss *SelectStatement) WriteSQL(sb *strings.Builder, args *Args) {
 	sb.WriteString("select")
 	if ss.isDistinct {
