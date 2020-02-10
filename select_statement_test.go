@@ -35,6 +35,13 @@ func TestSelectStatementDistinctOn(t *testing.T) {
 	assert.Empty(t, args)
 }
 
+func TestSelectStatementMultipleSelect(t *testing.T) {
+	a := pgsql.Select("a").Select("b")
+	sql, args := pgsql.Build(a)
+	assert.Equal(t, "select a, b", sql)
+	assert.Empty(t, args)
+}
+
 func TestSelectStatementWhere(t *testing.T) {
 	a := pgsql.Select("a, b, c").Fromf("t").Where("foo=?", 42)
 	sql, args := pgsql.Build(a)

@@ -24,10 +24,7 @@ func Fromf(s string, args ...interface{}) *SelectStatement {
 }
 
 func (ss *SelectStatement) Select(s string, args ...interface{}) *SelectStatement {
-	ss.selectClause = fooselectClause{
-		exprList: []SQLWriter{&FormatString{s: s, args: args}},
-	}
-
+	ss.selectClause.exprList = append(ss.selectClause.exprList, &FormatString{s: s, args: args})
 	return ss
 }
 
