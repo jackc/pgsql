@@ -59,6 +59,11 @@ func TestSelectStatementOrder(t *testing.T) {
 	sql, args := pgsql.Build(a)
 	assert.Equal(t, "select a, b, c from t order by c desc", sql)
 	assert.Empty(t, args)
+
+	a.Order("a asc")
+	sql, args = pgsql.Build(a)
+	assert.Equal(t, "select a, b, c from t order by c desc, a asc", sql)
+	assert.Empty(t, args)
 }
 
 func TestSelectStatementLimitAndOffset(t *testing.T) {

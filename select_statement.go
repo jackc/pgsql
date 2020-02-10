@@ -10,7 +10,7 @@ type SelectStatement struct {
 	selectClause  fooselectClause
 	fromClause    foofromClause
 	where         SQLWriter
-	orderByClause *fooorderClause
+	orderByClause fooorderClause
 	limit         int64
 	offset        int64
 }
@@ -57,7 +57,7 @@ func (ss *SelectStatement) Where(s string, args ...interface{}) *SelectStatement
 }
 
 func (ss *SelectStatement) Order(s string, args ...interface{}) *SelectStatement {
-	ss.orderByClause = &fooorderClause{exprList: []SQLWriter{&FormatString{s: s, args: args}}}
+	ss.orderByClause.exprList = append(ss.orderByClause.exprList, &FormatString{s: s, args: args})
 	return ss
 }
 
@@ -78,9 +78,7 @@ func (ss *SelectStatement) WriteSQL(sb *strings.Builder, args *Args) {
 		sb.WriteString(" where ")
 		ss.where.WriteSQL(sb, args)
 	}
-	if ss.orderByClause != nil {
-		ss.orderByClause.WriteSQL(sb, args)
-	}
+	ss.orderByClause.WriteSQL(sb, args)
 	if ss.limit != 0 {
 		sb.WriteString(" limit ")
 		sb.WriteString(strconv.FormatInt(ss.limit, 10))
@@ -145,6 +143,10 @@ type fooorderClause struct {
 }
 
 func (o fooorderClause) WriteSQL(sb *strings.Builder, args *Args) {
+	if len(o.exprList) == 0 {
+		return
+	}
+
 	sb.WriteString(" order by ")
 	for i, e := range o.exprList {
 		if i > 0 {
