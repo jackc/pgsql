@@ -28,11 +28,11 @@ name = $2
 where (id = $3)`, sql)
 	assert.Equal(t, []interface{}{30, "Alice", 42}, args)
 
-	a.Where(&pgsql.BinaryExpr{Left: pgsql.RawSQL("foo"), Op: "=", Right: &pgsql.QueryParameter{Value: 43}})
+	a.Wheref("foo=?", 43)
 	sql, args = pgsql.Build(a)
 	assert.Equal(t, `update people
 set age = $1,
 name = $2
-where ((id = $3) and (foo = $4))`, sql)
+where ((id = $3) and foo=$4)`, sql)
 	assert.Equal(t, []interface{}{30, "Alice", 42, 43}, args)
 }

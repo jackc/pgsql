@@ -372,3 +372,12 @@ func (rm RowMap) sortedKeys() []string {
 
 	return keys
 }
+
+type FormatString struct {
+	s    string
+	args []interface{}
+}
+
+func (fs *FormatString) WriteSQL(sb *strings.Builder, args *Args) {
+	sb.WriteString(args.Format(fs.s, fs.args...))
+}

@@ -37,6 +37,10 @@ func (us *UpdateStatement) Where(cond SQLWriter) *UpdateStatement {
 	return us
 }
 
+func (us *UpdateStatement) Wheref(s string, args ...interface{}) *UpdateStatement {
+	return us.Where(&FormatString{s: s, args: args})
+}
+
 func (us *UpdateStatement) WriteSQL(sb *strings.Builder, args *Args) {
 	sb.WriteString("update ")
 	sb.WriteString(us.tableName)
