@@ -7,7 +7,7 @@ import (
 type InsertStatement struct {
 	tableName string
 	columns   []string
-	values    AppendBuilder
+	values    SQLWriter
 }
 
 func Insert(tableName string) *InsertStatement {
@@ -35,7 +35,7 @@ func (is *InsertStatement) Values(vs *ValuesStatement) *InsertStatement {
 	return is
 }
 
-func (is *InsertStatement) AppendBuild(sb *strings.Builder, args *Args) {
+func (is *InsertStatement) WriteSQL(sb *strings.Builder, args *Args) {
 	sb.WriteString("insert into ")
 	sb.WriteString(is.tableName)
 	sb.WriteByte(' ')
@@ -53,6 +53,6 @@ func (is *InsertStatement) AppendBuild(sb *strings.Builder, args *Args) {
 
 	if is.values != nil {
 		sb.WriteByte('\n')
-		is.values.AppendBuild(sb, args)
+		is.values.WriteSQL(sb, args)
 	}
 }

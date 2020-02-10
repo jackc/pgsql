@@ -5,14 +5,14 @@ import (
 )
 
 type Assignment struct {
-	Left  AppendBuilder
-	Right AppendBuilder
+	Left  SQLWriter
+	Right SQLWriter
 }
 
 type UpdateStatement struct {
 	tableName   string
 	assignments []*Assignment
-	where       AppendBuilder
+	where       SQLWriter
 }
 
 func Update(tableName string) *UpdateStatement {
@@ -28,7 +28,7 @@ func (us *UpdateStatement) Set(data Updateable) *UpdateStatement {
 	return us
 }
 
-func (us *UpdateStatement) Where(cond AppendBuilder) *UpdateStatement {
+func (us *UpdateStatement) Where(cond SQLWriter) *UpdateStatement {
 	if us.where == nil {
 		us.where = cond
 	} else {
@@ -37,7 +37,7 @@ func (us *UpdateStatement) Where(cond AppendBuilder) *UpdateStatement {
 	return us
 }
 
-func (us *UpdateStatement) AppendBuild(sb *strings.Builder, args *Args) {
+func (us *UpdateStatement) WriteSQL(sb *strings.Builder, args *Args) {
 	sb.WriteString("update ")
 	sb.WriteString(us.tableName)
 	sb.WriteString("\nset ")
@@ -46,13 +46,13 @@ func (us *UpdateStatement) AppendBuild(sb *strings.Builder, args *Args) {
 		if i > 0 {
 			sb.WriteString(",\n")
 		}
-		a.Left.AppendBuild(sb, args)
+		a.Left.WriteSQL(sb, args)
 		sb.WriteString(" = ")
-		a.Right.AppendBuild(sb, args)
+		a.Right.WriteSQL(sb, args)
 	}
 
 	if us.where != nil {
 		sb.WriteString("\nwhere ")
-		us.where.AppendBuild(sb, args)
+		us.where.WriteSQL(sb, args)
 	}
 }

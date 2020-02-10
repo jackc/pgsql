@@ -5,7 +5,7 @@ import (
 )
 
 type ValuesStatement struct {
-	rows [][]AppendBuilder
+	rows [][]SQLWriter
 }
 
 func Values() *ValuesStatement {
@@ -13,10 +13,10 @@ func Values() *ValuesStatement {
 }
 
 func (vs *ValuesStatement) Row(values ...interface{}) *ValuesStatement {
-	row := make([]AppendBuilder, len(values))
+	row := make([]SQLWriter, len(values))
 	for i := range values {
 		in := values[i]
-		out, ok := in.(AppendBuilder)
+		out, ok := in.(SQLWriter)
 		if !ok {
 			out = &QueryParameter{Value: in}
 		}
@@ -28,7 +28,7 @@ func (vs *ValuesStatement) Row(values ...interface{}) *ValuesStatement {
 	return vs
 }
 
-func (vs *ValuesStatement) AppendBuild(sb *strings.Builder, args *Args) {
+func (vs *ValuesStatement) WriteSQL(sb *strings.Builder, args *Args) {
 	sb.WriteString("values ")
 	for i, row := range vs.rows {
 		if i > 0 {
@@ -39,7 +39,7 @@ func (vs *ValuesStatement) AppendBuild(sb *strings.Builder, args *Args) {
 			if j > 0 {
 				sb.WriteByte(',')
 			}
-			v.AppendBuild(sb, args)
+			v.WriteSQL(sb, args)
 		}
 		sb.WriteByte(')')
 	}

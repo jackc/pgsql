@@ -292,13 +292,13 @@ func writeExprList(sb *strings.Builder, exprList []string) {
 	}
 }
 
-type AppendBuilder interface {
-	AppendBuild(*strings.Builder, *Args)
+type SQLWriter interface {
+	WriteSQL(*strings.Builder, *Args)
 }
 
 type RawSQL string
 
-func (r RawSQL) AppendBuild(sb *strings.Builder, args *Args) {
+func (r RawSQL) WriteSQL(sb *strings.Builder, args *Args) {
 	sb.WriteString(string(r))
 }
 
@@ -306,32 +306,32 @@ type QueryParameter struct {
 	Value interface{}
 }
 
-func (qp *QueryParameter) AppendBuild(sb *strings.Builder, args *Args) {
+func (qp *QueryParameter) WriteSQL(sb *strings.Builder, args *Args) {
 	sb.WriteString(args.Use(qp.Value).String())
 }
 
-func Build(ab AppendBuilder) (string, []interface{}) {
+func Build(ab SQLWriter) (string, []interface{}) {
 	sb := &strings.Builder{}
 	args := &Args{}
 
-	ab.AppendBuild(sb, args)
+	ab.WriteSQL(sb, args)
 
 	return sb.String(), args.Values()
 }
 
 type BinaryExpr struct {
-	Left  AppendBuilder
+	Left  SQLWriter
 	Op    string
-	Right AppendBuilder
+	Right SQLWriter
 }
 
-func (be *BinaryExpr) AppendBuild(sb *strings.Builder, args *Args) {
+func (be *BinaryExpr) WriteSQL(sb *strings.Builder, args *Args) {
 	sb.WriteByte('(')
-	be.Left.AppendBuild(sb, args)
+	be.Left.WriteSQL(sb, args)
 	sb.WriteByte(' ')
 	sb.WriteString(be.Op)
 	sb.WriteByte(' ')
-	be.Right.AppendBuild(sb, args)
+	be.Right.WriteSQL(sb, args)
 	sb.WriteByte(')')
 }
 
