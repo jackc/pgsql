@@ -56,13 +56,9 @@ func (ss *SelectStatement) Where(s string, args ...interface{}) *SelectStatement
 	return ss
 }
 
-func (ss *SelectStatement) Order(order SQLWriter) *SelectStatement {
-	ss.orderByClause = &fooorderClause{exprList: []SQLWriter{order}}
+func (ss *SelectStatement) Order(s string, args ...interface{}) *SelectStatement {
+	ss.orderByClause = &fooorderClause{exprList: []SQLWriter{&FormatString{s: s, args: args}}}
 	return ss
-}
-
-func (ss *SelectStatement) Orderf(s string, args ...interface{}) *SelectStatement {
-	return ss.Order(&FormatString{s: s, args: args})
 }
 
 func (ss *SelectStatement) Limit(n int64) *SelectStatement {

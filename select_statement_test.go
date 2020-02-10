@@ -55,14 +55,14 @@ func TestSelectStatementWhere(t *testing.T) {
 }
 
 func TestSelectStatementOrder(t *testing.T) {
-	a := pgsql.Select("a, b, c").From("t").Orderf("c desc")
+	a := pgsql.Select("a, b, c").From("t").Order("c desc")
 	sql, args := pgsql.Build(a)
 	assert.Equal(t, "select a, b, c from t order by c desc", sql)
 	assert.Empty(t, args)
 }
 
 func TestSelectStatementLimitAndOffset(t *testing.T) {
-	a := pgsql.Select("a, b, c").From("t").Orderf("c desc")
+	a := pgsql.Select("a, b, c").From("t").Order("c desc")
 	a.Limit(5)
 	sql, args := pgsql.Build(a)
 	assert.Equal(t, "select a, b, c from t order by c desc limit 5", sql)
