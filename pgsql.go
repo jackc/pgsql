@@ -16,11 +16,11 @@ func (r rawSQL) WriteSQL(sb *strings.Builder, args *Args) {
 	sb.WriteString(string(r))
 }
 
-type QueryParameter struct {
+type Param struct {
 	Value interface{}
 }
 
-func (qp *QueryParameter) WriteSQL(sb *strings.Builder, args *Args) {
+func (qp *Param) WriteSQL(sb *strings.Builder, args *Args) {
 	sb.WriteString(args.Use(qp.Value).String())
 }
 
@@ -70,7 +70,7 @@ func (rm RowMap) UpdateData() []*Assignment {
 
 	assignments := make([]*Assignment, len(keys))
 	for i, k := range keys {
-		assignments[i] = &Assignment{Left: rawSQL(k), Right: &QueryParameter{Value: rm[k]}}
+		assignments[i] = &Assignment{Left: rawSQL(k), Right: &Param{Value: rm[k]}}
 	}
 
 	return assignments

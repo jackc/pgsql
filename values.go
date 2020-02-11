@@ -18,7 +18,7 @@ func (vs *ValuesStatement) Row(values ...interface{}) *ValuesStatement {
 		in := values[i]
 		out, ok := in.(SQLWriter)
 		if !ok {
-			out = &QueryParameter{Value: in}
+			out = &Param{Value: in}
 		}
 		row[i] = out
 	}
