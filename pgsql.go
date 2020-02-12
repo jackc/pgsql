@@ -4,6 +4,8 @@ package pgsql
 import (
 	"sort"
 	"strings"
+
+	"github.com/jackc/pgx/v4"
 )
 
 type SQLWriter interface {
@@ -16,12 +18,18 @@ func (r rawSQL) WriteSQL(sb *strings.Builder, args *Args) {
 	sb.WriteString(string(r))
 }
 
+type Ident pgx.Identifier
+
+func (i Ident) WriteSQL(sb *strings.Builder, args *Args) {
+	sb.WriteString(pgx.Identifier(i).Sanitize())
+}
+
 type Param struct {
 	Value interface{}
 }
 
-func (qp *Param) WriteSQL(sb *strings.Builder, args *Args) {
-	sb.WriteString(args.Use(qp.Value).String())
+func (p Param) WriteSQL(sb *strings.Builder, args *Args) {
+	sb.WriteString(args.Use(p.Value).String())
 }
 
 func Build(ab SQLWriter) (string, []interface{}) {
