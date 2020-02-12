@@ -9,6 +9,12 @@ type Assignment struct {
 	Right SQLWriter
 }
 
+type Assignments []*Assignment
+
+func (a Assignments) UpdateData() []*Assignment {
+	return []*Assignment(a)
+}
+
 type UpdateStatement struct {
 	tableName     string
 	setf          *FormatString
