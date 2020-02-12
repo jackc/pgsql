@@ -5,8 +5,9 @@ import (
 )
 
 type DeleteStatement struct {
-	tableName string
-	whereList whereList
+	tableName     string
+	whereList     whereList
+	returningList returningList
 }
 
 func Delete(tableName string) *DeleteStatement {
@@ -18,10 +19,16 @@ func (ds *DeleteStatement) Where(s string, args ...interface{}) *DeleteStatement
 	return ds
 }
 
+func (ds *DeleteStatement) Returning(s string, args ...interface{}) *DeleteStatement {
+	ds.returningList = append(ds.returningList, &FormatString{s: s, args: args})
+	return ds
+}
+
 func (ds *DeleteStatement) WriteSQL(sb *strings.Builder, args *Args) {
 	sb.WriteString("delete from ")
 	sb.WriteString(ds.tableName)
 	ds.whereList.WriteSQL(sb, args)
+	ds.returningList.WriteSQL(sb, args)
 }
 
 func (ds *DeleteStatement) Apply(others ...*SelectStatement) *DeleteStatement {

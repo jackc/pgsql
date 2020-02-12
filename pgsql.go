@@ -122,3 +122,20 @@ func (wl whereList) WriteSQL(sb *strings.Builder, args *Args) {
 		sb.WriteByte(')')
 	}
 }
+
+type returningList []SQLWriter
+
+func (rl returningList) WriteSQL(sb *strings.Builder, args *Args) {
+	if len(rl) == 0 {
+		return
+	}
+
+	sb.WriteString(" returning ")
+
+	for i, expr := range rl {
+		if i > 0 {
+			sb.WriteString(", ")
+		}
+		expr.WriteSQL(sb, args)
+	}
+}

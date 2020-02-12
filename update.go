@@ -10,10 +10,11 @@ type Assignment struct {
 }
 
 type UpdateStatement struct {
-	tableName   string
-	setf        *FormatString
-	assignments []*Assignment
-	whereList   whereList
+	tableName     string
+	setf          *FormatString
+	assignments   []*Assignment
+	whereList     whereList
+	returningList returningList
 }
 
 func Update(tableName string) *UpdateStatement {
@@ -41,6 +42,11 @@ func (us *UpdateStatement) Where(s string, args ...interface{}) *UpdateStatement
 	return us
 }
 
+func (us *UpdateStatement) Returning(s string, args ...interface{}) *UpdateStatement {
+	us.returningList = append(us.returningList, &FormatString{s: s, args: args})
+	return us
+}
+
 func (us *UpdateStatement) WriteSQL(sb *strings.Builder, args *Args) {
 	sb.WriteString("update ")
 	sb.WriteString(us.tableName)
@@ -60,6 +66,7 @@ func (us *UpdateStatement) WriteSQL(sb *strings.Builder, args *Args) {
 	}
 
 	us.whereList.WriteSQL(sb, args)
+	us.returningList.WriteSQL(sb, args)
 }
 
 func (us *UpdateStatement) Apply(others ...*SelectStatement) *UpdateStatement {

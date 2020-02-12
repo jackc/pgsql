@@ -5,9 +5,10 @@ import (
 )
 
 type InsertStatement struct {
-	tableName string
-	columns   []string
-	values    SQLWriter
+	tableName     string
+	columns       []string
+	values        SQLWriter
+	returningList returningList
 }
 
 func Insert(tableName string) *InsertStatement {
@@ -35,6 +36,11 @@ func (is *InsertStatement) Values(vs *ValuesStatement) *InsertStatement {
 	return is
 }
 
+func (is *InsertStatement) Returning(s string, args ...interface{}) *InsertStatement {
+	is.returningList = append(is.returningList, &FormatString{s: s, args: args})
+	return is
+}
+
 func (is *InsertStatement) WriteSQL(sb *strings.Builder, args *Args) {
 	sb.WriteString("insert into ")
 	sb.WriteString(is.tableName)
@@ -55,4 +61,6 @@ func (is *InsertStatement) WriteSQL(sb *strings.Builder, args *Args) {
 		sb.WriteByte(' ')
 		is.values.WriteSQL(sb, args)
 	}
+
+	is.returningList.WriteSQL(sb, args)
 }
