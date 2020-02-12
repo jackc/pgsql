@@ -31,6 +31,10 @@ func Where(s string, args ...interface{}) *SelectStatement {
 	return (&SelectStatement{}).Where(s, args...)
 }
 
+func (ss *SelectStatement) SelectStatement() (*SelectStatement, error) {
+	return ss, nil
+}
+
 func (ss *SelectStatement) Select(s string, args ...interface{}) *SelectStatement {
 	ss.selectList = append(ss.selectList, &FormatString{s: s, args: args})
 	return ss

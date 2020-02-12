@@ -14,6 +14,10 @@ func Delete(tableName string) *DeleteStatement {
 	return &DeleteStatement{tableName: tableName}
 }
 
+func (ds *DeleteStatement) DeleteStatement() (*DeleteStatement, error) {
+	return ds, nil
+}
+
 func (ds *DeleteStatement) Where(s string, args ...interface{}) *DeleteStatement {
 	ds.whereList = append(ds.whereList, &FormatString{s: s, args: args})
 	return ds

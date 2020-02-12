@@ -15,6 +15,10 @@ func Insert(tableName string) *InsertStatement {
 	return &InsertStatement{tableName: tableName}
 }
 
+func (is *InsertStatement) InsertStatement() (*InsertStatement, error) {
+	return is, nil
+}
+
 type Insertable interface {
 	InsertData() ([]string, *ValuesStatement)
 }

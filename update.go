@@ -27,6 +27,10 @@ func Update(tableName string) *UpdateStatement {
 	return &UpdateStatement{tableName: tableName}
 }
 
+func (us *UpdateStatement) UpdateStatement() (*UpdateStatement, error) {
+	return us, nil
+}
+
 type Updateable interface {
 	UpdateData() []*Assignment
 }
