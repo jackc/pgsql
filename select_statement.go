@@ -76,28 +76,26 @@ func (ss *SelectStatement) Offset(n int64) *SelectStatement {
 	return ss
 }
 
-// Merge merges other's from, where, order, limit and offset if they are set.
-func (ss *SelectStatement) Merge(other *SelectStatement) *SelectStatement {
-	if other.from != nil {
-		ss.from = other.from
-	}
+// Apply merges other's from, where, order, limit and offset if they are set.
+func (ss *SelectStatement) Apply(others ...*SelectStatement) *SelectStatement {
+	for _, other := range others {
+		if other.from != nil {
+			ss.from = other.from
+		}
 
-	ss.whereList = append(ss.whereList, other.whereList...)
-	ss.orderByList = append(ss.orderByList, other.orderByList...)
+		ss.whereList = append(ss.whereList, other.whereList...)
+		ss.orderByList = append(ss.orderByList, other.orderByList...)
 
-	if other.limit != 0 {
-		ss.limit = other.limit
-	}
+		if other.limit != 0 {
+			ss.limit = other.limit
+		}
 
-	if other.offset != 0 {
-		ss.offset = other.offset
+		if other.offset != 0 {
+			ss.offset = other.offset
+		}
 	}
 
 	return ss
-}
-
-func (ss *SelectStatement) Delete() *DeleteStatement {
-	return &DeleteStatement{whereList: ss.whereList}
 }
 
 func (ss *SelectStatement) WriteSQL(sb *strings.Builder, args *Args) {

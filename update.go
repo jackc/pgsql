@@ -61,3 +61,11 @@ func (us *UpdateStatement) WriteSQL(sb *strings.Builder, args *Args) {
 
 	us.whereList.WriteSQL(sb, args)
 }
+
+func (us *UpdateStatement) Apply(others ...*SelectStatement) *UpdateStatement {
+	for _, other := range others {
+		us.whereList = append(us.whereList, other.whereList...)
+	}
+
+	return us
+}

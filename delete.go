@@ -24,19 +24,10 @@ func (ds *DeleteStatement) WriteSQL(sb *strings.Builder, args *Args) {
 	ds.whereList.WriteSQL(sb, args)
 }
 
-func (ds *DeleteStatement) Delete() *DeleteStatement {
-	return ds
-}
-
-func (ds *DeleteStatement) Merge(others ...Deleter) *DeleteStatement {
-	for _, a := range others {
-		other := a.Delete()
+func (ds *DeleteStatement) Apply(others ...*SelectStatement) *DeleteStatement {
+	for _, other := range others {
 		ds.whereList = append(ds.whereList, other.whereList...)
 	}
 
 	return ds
-}
-
-type Deleter interface {
-	Delete() *DeleteStatement
 }

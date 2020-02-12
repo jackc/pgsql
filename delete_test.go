@@ -22,14 +22,14 @@ func TestDeleteStatementWhere(t *testing.T) {
 	assert.Equal(t, []interface{}{43}, args)
 }
 
-func TestDeleteStatementMerge(t *testing.T) {
+func TestDeleteStatementApply(t *testing.T) {
 	a := pgsql.Delete("people")
 	a.Where("foo=?", 43)
 	sql, args := pgsql.Build(a)
 	assert.Equal(t, `delete from people where (foo=$1)`, sql)
 	assert.Equal(t, []interface{}{43}, args)
 
-	a.Merge(pgsql.Where("bar=?", 7))
+	a.Apply(pgsql.Where("bar=?", 7))
 	sql, args = pgsql.Build(a)
 	assert.Equal(t, `delete from people where (foo=$1) and (bar=$2)`, sql)
 	assert.Equal(t, []interface{}{43, 7}, args)

@@ -36,3 +36,17 @@ func TestUpdateStatementWhere(t *testing.T) {
 	assert.Equal(t, `update people set age = $1, name = $2 where (id=$3) and (foo=$4)`, sql)
 	assert.Equal(t, []interface{}{30, "Alice", 42, 43}, args)
 }
+
+func TestUpdateStatementMerge(t *testing.T) {
+	a := pgsql.Update("people")
+	a.Set(pgsql.RowMap{"name": "Alice", "age": 30})
+	a.Where("id=?", 42)
+	sql, args := pgsql.Build(a)
+	assert.Equal(t, `update people set age = $1, name = $2 where (id=$3)`, sql)
+	assert.Equal(t, []interface{}{30, "Alice", 42}, args)
+
+	a.Apply(pgsql.Where("foo=?", 43))
+	sql, args = pgsql.Build(a)
+	assert.Equal(t, `update people set age = $1, name = $2 where (id=$3) and (foo=$4)`, sql)
+	assert.Equal(t, []interface{}{30, "Alice", 42, 43}, args)
+}

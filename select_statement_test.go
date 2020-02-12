@@ -86,14 +86,14 @@ func TestSelectStatementLimitAndOffset(t *testing.T) {
 	assert.Empty(t, args)
 }
 
-func TestSelectStatementMerge(t *testing.T) {
+func TestSelectStatementApply(t *testing.T) {
 	a := pgsql.Select("a, b, c").From("t").Order("c desc")
 	sql, args := pgsql.Build(a)
 	assert.Equal(t, "select a, b, c from t order by c desc", sql)
 	assert.Empty(t, args)
 
 	b := pgsql.Where("d=?", 42).Limit(5)
-	a.Merge(b)
+	a.Apply(b)
 
 	sql, args = pgsql.Build(a)
 	assert.Equal(t, "select a, b, c from t where (d=$1) order by c desc limit 5", sql)
