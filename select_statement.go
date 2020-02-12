@@ -96,6 +96,10 @@ func (ss *SelectStatement) Merge(other *SelectStatement) *SelectStatement {
 	return ss
 }
 
+func (ss *SelectStatement) Delete() *DeleteStatement {
+	return &DeleteStatement{whereList: ss.whereList}
+}
+
 func (ss *SelectStatement) WriteSQL(sb *strings.Builder, args *Args) {
 	sb.WriteString("select")
 	if ss.isDistinct {
