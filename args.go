@@ -14,33 +14,16 @@ func (p Placeholder) String() string {
 }
 
 type Args struct {
-	values              []interface{}
-	valuesToPlaceholder map[interface{}]Placeholder
+	values []interface{}
 }
 
 func (a *Args) Use(v interface{}) Placeholder {
-	if p, present := a.existingPlaceholder(v); present {
-		return p
-	}
-
 	if len(a.values) == 0 {
 		a.values = make([]interface{}, 0, 8)
 	}
 
-	// Start using a map for existingPlaceholder lookup when there are enough values to make it worth while.
-	if len(a.values) == argsCountSwitchToMap {
-		a.valuesToPlaceholder = make(map[interface{}]Placeholder, argsCountSwitchToMap)
-		for i, v := range a.values {
-			a.valuesToPlaceholder[v] = Placeholder(i + 1)
-		}
-	}
-
 	a.values = append(a.values, v)
 	p := Placeholder(len(a.values))
-
-	if a.valuesToPlaceholder != nil {
-		a.valuesToPlaceholder[v] = p
-	}
 
 	return p
 }
@@ -67,43 +50,11 @@ func (a *Args) Format(s string, values ...interface{}) string {
 	return b.String()
 }
 
-// isEqualSafe returns true if a == b or false is a != b or a or b is not comparible.
-func isEqualSafe(a, b interface{}) (eq bool) {
-	defer func() {
-		if r := recover(); r != nil {
-			eq = false
-		}
-	}()
-
-	return a == b
-}
-
-func (a *Args) existingPlaceholder(v interface{}) (p Placeholder, present bool) {
-	if a.valuesToPlaceholder != nil {
-		p, present = a.valuesToPlaceholder[v]
-		return p, present
-	}
-
-	for i, vv := range a.Values() {
-		if isEqualSafe(v, vv) {
-			return Placeholder(i + 1), true
-		}
-	}
-
-	return 0, false
-}
-
 func (a *Args) Clone() *Args {
 	b := &Args{}
 
 	b.values = make([]interface{}, len(a.values))
 	copy(b.values, a.values)
 
-	if a.valuesToPlaceholder != nil {
-		b.valuesToPlaceholder = make(map[interface{}]Placeholder, len(a.valuesToPlaceholder))
-		for k, v := range a.valuesToPlaceholder {
-			b.valuesToPlaceholder[k] = v
-		}
-	}
 	return b
 }

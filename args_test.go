@@ -24,10 +24,10 @@ func TestArgs(t *testing.T) {
 	assert.Equal(t, []interface{}{42, 7}, args.Values())
 
 	placeholder = args.Use(42)
-	assert.Equal(t, pgsql.Placeholder(1), placeholder)
-	assert.Equal(t, []interface{}{42, 7}, args.Values())
+	assert.Equal(t, pgsql.Placeholder(3), placeholder)
+	assert.Equal(t, []interface{}{42, 7, 42}, args.Values())
 
-	assert.Equal(t, "array[$3, $1, $2]", args.Format("array[?, ?, ?]", 1, 42, 7))
+	assert.Equal(t, "array[$4, $5, $6]", args.Format("array[?, ?, ?]", 1, 42, 7))
 }
 
 func TestArgsUseIncomparableValue(t *testing.T) {
