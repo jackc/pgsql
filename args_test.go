@@ -43,14 +43,14 @@ func TestArgsUseIncomparableValue(t *testing.T) {
 	assert.Equal(t, pgsql.Placeholder(2), placeholder)
 	assert.Equal(t, []interface{}{"a", stringSlice}, args.Values())
 
-	placeholder = args.Use(7)
+	placeholder = args.Use(nil)
 	assert.Equal(t, pgsql.Placeholder(3), placeholder)
-	assert.Equal(t, []interface{}{"a", stringSlice, 7}, args.Values())
+	assert.Equal(t, []interface{}{"a", stringSlice, nil}, args.Values())
 
 	// []string is not comparable so it is considered a new placeholder.
 	placeholder = args.Use(stringSlice)
 	assert.Equal(t, pgsql.Placeholder(4), placeholder)
-	assert.Equal(t, []interface{}{"a", stringSlice, 7, stringSlice}, args.Values())
+	assert.Equal(t, []interface{}{"a", stringSlice, nil, stringSlice}, args.Values())
 }
 
 func TestArgsClone(t *testing.T) {
