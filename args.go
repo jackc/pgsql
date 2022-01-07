@@ -1,6 +1,7 @@
 package pgsql
 
 import (
+	"reflect"
 	"strconv"
 	"strings"
 )
@@ -67,6 +68,15 @@ func (a *Args) Format(s string, values ...interface{}) string {
 	return b.String()
 }
 
+// isEqualSafe returns true if a == b or false is a != b or a or b is not comparible.
+func isEqualSafe(a, b interface{}) bool {
+	if !(reflect.TypeOf(a).Comparable() && reflect.TypeOf(b).Comparable()) {
+		return false
+	}
+
+	return a == b
+}
+
 func (a *Args) existingPlaceholder(v interface{}) (p Placeholder, present bool) {
 	if a.valuesToPlaceholder != nil {
 		p, present = a.valuesToPlaceholder[v]
@@ -74,7 +84,7 @@ func (a *Args) existingPlaceholder(v interface{}) (p Placeholder, present bool) 
 	}
 
 	for i, vv := range a.Values() {
-		if v == vv {
+		if isEqualSafe(v, vv) {
 			return Placeholder(i + 1), true
 		}
 	}
